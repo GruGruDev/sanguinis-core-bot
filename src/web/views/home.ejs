@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>SANGUINIS - Discord Bot Việt Nam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body
+    class="bg-[#0b0e14] text-white min-h-screen flex flex-col justify-between p-8 font-sans"
+  >
+    <div class="max-w-4xl mx-auto text-center my-auto">
+      <div
+        class="w-24 h-24 rounded-3xl bg-red-900/80 border border-red-500/30 flex items-center justify-center text-5xl mx-auto mb-8 shadow-2xl shadow-red-900/50"
+      >
+        🩸
+      </div>
+      <h1 class="text-6xl font-black text-red-600 tracking-wider mb-6">
+        SANGUINIS
+      </h1>
+      <p class="text-gray-400 text-xl mb-10 max-w-2xl mx-auto">
+        Hệ thống Bot Discord Mã Nguồn Mở & Dashboard Quản Lý Máy Chủ Tối Ưu Cho
+        Cộng Đồng Việt Nam
+      </p>
+      <div class="flex justify-center gap-6">
+        <a
+          href="https://discord.com/api/oauth2/authorize?client_id=<%= clientId %>&permissions=8&scope=bot%20applications.commands"
+          target="_blank"
+          class="bg-red-800 hover:bg-red-700 px-8 py-4 rounded-xl font-bold text-lg transition shadow-lg shadow-red-900/30"
+          ><i class="fa-solid fa-robot mr-2"></i> Thêm Bot Vào Server</a
+        >
+        <a
+          href="/dashboard"
+          class="bg-[#1a1f2e] hover:bg-[#252b3d] border border-gray-700 px-8 py-4 rounded-xl font-bold text-lg transition shadow-lg"
+          ><i class="fa-solid fa-right-to-bracket mr-2"></i> Đăng Nhập
+          Dashboard</a
+        >
+      </div>
+    </div>
+  </body>
+</html>

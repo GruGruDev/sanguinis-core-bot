@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cấu Hình - <%= targetGuild.name %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0b0e14; }
+    ::-webkit-scrollbar-thumb { background: #1f293d; border-radius: 3px; }
+
+    .sanguinis-swal {
+      background: linear-gradient(180deg, rgba(16, 20, 29, 0.98), rgba(25, 15, 20, 0.98));
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.18), 0 20px 60px rgba(0, 0, 0, 0.8);
+      border-radius: 18px !important;
+    }
+
+    .sanguinis-swal .swal2-title {
+      color: #f8fafc;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .sanguinis-swal .swal2-html-container,
+    .sanguinis-swal .swal2-content {
+      color: #d1d5db;
+      font-size: 0.92rem;
+    }
+
+    .sanguinis-swal .swal2-confirm,
+    .sanguinis-swal .swal2-cancel {
+      border-radius: 12px !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.02em;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .sanguinis-swal .swal2-confirm {
+      background: linear-gradient(135deg, #991b1b, #ef4444) !important;
+      box-shadow: 0 12px 25px rgba(239, 68, 68, 0.35) !important;
+      border: none !important;
+    }
+
+    .sanguinis-swal .swal2-cancel {
+      background: linear-gradient(135deg, rgba(31, 41, 55, 0.95), rgba(17, 24, 39, 0.95)) !important;
+      color: #f3f4f6 !important;
+      border: 1px solid rgba(148, 163, 184, 0.25) !important;
+    }
+
+    .sanguinis-swal .swal2-confirm:hover,
+    .sanguinis-swal .swal2-cancel:hover {
+      transform: translateY(-1px);
+    }
+
+    .sanguinis-swal .swal2-icon {
+      border-width: 3px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body class="bg-[#0b0e14] text-gray-300 font-sans h-screen flex flex-col overflow-hidden text-sm">
+
+  <nav class="h-16 bg-[#10141d] border-b border-gray-800/80 flex items-center justify-between px-6 shrink-0">
+    <div class="flex items-center gap-12">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-red-900/80 flex items-center justify-center text-red-500 font-bold">🩸</div>
+        <div>
+          <h1 class="font-black text-white text-lg leading-none">SANGUINIS <span class="text-red-500 text-xs">●</span></h1>
+          <p class="text-[9px] text-red-400 uppercase tracking-widest">OPEN-SOURCE • CỘNG ĐỒNG VIỆT NAM</p>
+        </div>
+      </div>
+      <div class="hidden md:flex gap-6 text-sm font-medium">
+        <a href="/dashboard" class="text-gray-400 hover:text-white flex flex-col items-center gap-1 pb-1"><i class="fa-solid fa-house"></i> Tổng quan</a>
+        <a href="#" class="text-blue-400 flex flex-col items-center gap-1 border-b-2 border-blue-400 pb-1"><i class="fa-solid fa-server"></i> Máy chủ</a>
+        <a href="#" class="text-gray-400 hover:text-white flex flex-col items-center gap-1 pb-1"><i class="fa-solid fa-terminal"></i> Lệnh</a>
+        <a href="#" class="text-gray-400 hover:text-white flex flex-col items-center gap-1 pb-1"><i class="fa-solid fa-gear"></i> Cài đặt</a>
+      </div>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3 bg-[#1a1f2e] px-3 py-1.5 rounded-lg border border-gray-800">
+        <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png" class="w-8 h-8 rounded-full">
+        <div>
+          <p class="text-white text-sm font-bold leading-none"><%= user.username %></p>
+          <p class="text-[10px] text-emerald-400 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span> Online</p>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="flex flex-1 overflow-hidden">
+    <aside class="w-64 bg-[#10141d] border-r border-gray-800/80 flex flex-col p-4 shrink-0 overflow-y-auto">
+      <a href="https://discord.com/api/oauth2/authorize?client_id=<%= user.id %>&permissions=8&scope=bot%20applications.commands" target="_blank" class="w-full flex items-center justify-center gap-3 p-3 rounded-xl hover:bg-[#1a1f2e] text-gray-400 transition mb-4 border border-dashed border-gray-700">
+        <i class="fa-solid fa-plus text-blue-400"></i> <span class="font-medium text-sm">Thêm server</span>
+      </a>
+      
+      <div class="space-y-1 overflow-y-auto flex-1">
+        <% adminGuilds.forEach(function(g) { %>
+          <a href="/dashboard/<%= g.id %>" class="flex items-center gap-3 p-2.5 rounded-xl transition group <%= g.id === targetGuild.id ? 'bg-red-900/30 border border-red-500/30 text-white font-bold' : 'hover:bg-[#1a1f2e] text-gray-400' %>">
+            <% if(g.icon) { %>
+              <img src="https://cdn.discordapp.com/icons/<%= g.id %>/<%= g.icon %>.png" class="w-8 h-8 rounded-full border border-gray-700">
+            <% } else { %>
+              <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-xs font-bold text-white border border-gray-700"><%= g.name.charAt(0) %></div>
+            <% } %>
+            <span class="text-sm truncate"><%= g.name %></span>
+          </a>
+        <% }); %>
+      </div>
+    </aside>
+
+    <main class="flex-1 p-8 overflow-y-auto">
+      <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-800">
+        <div>
+          <h2 class="text-2xl font-black text-white">CẤU HÌNH HỆ THỐNG BOT</h2>
+          <p class="text-xs text-gray-400 mt-1">Đang thiết lập cho server: <strong class="text-red-400"><%= targetGuild.name %></strong></p>
+        </div>
+      </div>
+
+      <form action="/api/config/<%= targetGuild.id %>" method="POST" class="space-y-8">
+        
+        <section class="bg-[#121824] border border-gray-800/80 rounded-2xl p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-base font-bold text-red-500 flex items-center gap-2">
+              <i class="fa-solid fa-door-open"></i> 1. Kênh Chào Mừng & Banner/GIF
+            </h3>
+            <button type="button" onclick="sendTest('welcome')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+              <i class="fa-solid fa-paper-plane"></i> Gửi Test Welcome
+            </button>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-300 mb-2">📌 Kênh gửi tin Chào Mừng</label>
+              <select name="welcomeChannelId" class="w-full bg-[#171d2b] border border-gray-800 rounded-xl p-3 text-white focus:border-red-600 focus:outline-none">
+                <option value="">-- Tắt / Không sử dụng --</option>
+                <% textChannels.forEach(function(ch) { %>
+                  <option value="<%= ch.id %>" <%= config.welcome_channel_id === ch.id ? 'selected' : '' %>># <%= ch.name %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-300 mb-2">🖼️ Link Banner / GIF Chào Mừng</label>
+              <input type="url" name="welcomeBannerUrl" value="<%= config.welcome_banner_url || '' %>" placeholder="https://i.imgur.com/example.gif" class="w-full bg-[#171d2b] border border-gray-800 rounded-xl p-3 text-white text-xs focus:border-red-600 focus:outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-gray-300 mb-2">Nội dung Chào Mừng (Hỗ trợ: {user}, {guild}, {memberCount})</label>
+            <textarea name="welcomeMessage" rows="3" class="w-full bg-[#171d2b] border border-gray-800 rounded-xl p-3 text-white focus:border-red-600 focus:outline-none"><%= config.welcome_message || 'Chào mừng bạn đến SANGUINIS!\n\n📜 Đọc #rules\n🎮 Chọn role tại #roles\n💬 Chat tại #general' %></textarea>
+          </div>
+        </section>
+
+        <section class="bg-[#121824] border border-gray-800/80 rounded-2xl p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-base font-bold text-gray-400 flex items-center gap-2">
+              <i class="fa-solid fa-door-closed"></i> 2. Kênh Tạm Biệt Công Khai
+            </h3>
+            <button type="button" onclick="sendTest('goodbye')" class="bg-gray-700 hover:bg-gray-600 text-white font-bold text-xs px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+              <i class="fa-solid fa-paper-plane"></i> Gửi Test Goodbye
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-300 mb-2">🚪 Kênh gửi tin Tạm Biệt</label>
+              <select name="leaveChannelId" class="w-full bg-[#171d2b] border border-gray-800 rounded-xl p-3 text-white focus:border-red-600 focus:outline-none">
+                <option value="">-- Tắt / Không sử dụng --</option>
+                <% textChannels.forEach(function(ch) { %>
+                  <option value="<%= ch.id %>" <%= config.leave_channel_id === ch.id ? 'selected' : '' %>># <%= ch.name %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-300 mb-2">🖼️ Link Banner / GIF Tạm Biệt</label>
+              <input type="url" name="leaveBannerUrl" value="<%= config.leave_banner_url || '' %>" placeholder="https://i.imgur.com/example.gif" class="w-full bg-[#171d2b] border border-gray-800 rounded-xl p-3 text-white text-xs focus:border-red-600 focus:outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-gray-300 mb-2">Nội dung Tạm Biệt (Hỗ trợ: {user}, {user.tag}, {guild})</label>
+            <textarea name="leaveMessage" rows="2" class="w-full bg-[#171d2b] border border-gray-800 rounded-xl p-3 text-white focus:border-red-600 focus:outline-none"><%= config.leave_message || '**{user.tag}** đã rời khỏi máy chủ {guild}.' %></textarea>
+          </div>
+        </section>
+
+        <section class="bg-[#121824] border border-gray-800/80 rounded-2xl p-6">
+          <h3 class="text-base font-bold text-indigo-400 mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-paper-plane"></i> 3. Tin Nhắn Riêng Cho Thành Viên (Direct Message)
+          </h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-[#171d2b] p-4 rounded-xl border border-gray-800/80 space-y-3">
+              <div class="flex justify-between items-center">
+                <span class="font-bold text-white text-xs">📩 DM Khi Vào Server (DM on Join)</span>
+                <div class="flex items-center gap-3">
+                  <button type="button" onclick="sendTest('dm-welcome')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] px-2.5 py-1 rounded transition">
+                    🚀 Test DM Join
+                  </button>
+                  <input type="checkbox" name="dmWelcomeEnabled" value="1" <%= config.dm_welcome_enabled ? 'checked' : '' %> class="w-4 h-4 accent-indigo-600 cursor-pointer">
+                </div>
+              </div>
+              <textarea name="dmWelcomeMessage" rows="3" placeholder="Nội dung DM chào mừng..." class="w-full bg-[#10141d] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-indigo-500 focus:outline-none"><%= config.dm_welcome_message || '' %></textarea>
+            </div>
+
+            <div class="bg-[#171d2b] p-4 rounded-xl border border-gray-800/80 space-y-3">
+              <div class="flex justify-between items-center">
+                <span class="font-bold text-white text-xs">🚪 DM Khi Rời Server (DM on Leave)</span>
+                <div class="flex items-center gap-3">
+                  <button type="button" onclick="sendTest('dm-leave')" class="bg-gray-700 hover:bg-gray-600 text-white font-bold text-[10px] px-2.5 py-1 rounded transition">
+                    🚀 Test DM Leave
+                  </button>
+                  <input type="checkbox" name="dmLeaveEnabled" value="1" <%= config.dm_leave_enabled ? 'checked' : '' %> class="w-4 h-4 accent-indigo-600 cursor-pointer">
+                </div>
+              </div>
+              <textarea name="dmLeaveMessage" rows="3" placeholder="Nội dung DM tạm biệt..." class="w-full bg-[#10141d] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-indigo-500 focus:outline-none"><%= config.dm_leave_message || '' %></textarea>
+            </div>
+          </div>
+        </section>
+
+        <section class="bg-[#121824] border border-gray-800/80 rounded-2xl p-6">
+          <h3 class="text-base font-bold text-amber-400 mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-bolt"></i> 4. Tùy Chỉnh Thông Số Leveling (Phong cách Arcane)
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-300 mb-2">⚡ XP Tối Thiểu / Tin Nhắn</label>
+              <input type="number" name="minXp" value="<%= config.min_xp || 15 %>" class="w-full bg-[#171d2b] border border-gray-800 rounded-xl p-3 text-white focus:border-amber-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-300 mb-2">🔥 XP Tối Đa / Tin Nhắn</label>
+              <input type="number" name="maxXp" value="<%= config.max_xp || 25 %>" class="w-full bg-[#171d2b] border border-gray-800 rounded-xl p-3 text-white focus:border-amber-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-300 mb-2">⏱️ Cooldown Tích XP (Giây)</label>
+              <input type="number" name="cooldown" value="<%= config.cooldown || 60 %>" class="w-full bg-[#171d2b] border border-gray-800 rounded-xl p-3 text-white focus:border-amber-500 focus:outline-none">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-300 mb-2">📣 Kênh Thông Báo Lên Cấp (Level Up)</label>
+              <select name="levelUpChannelId" class="w-full bg-[#171d2b] border border-gray-800 rounded-xl p-3 text-white focus:border-amber-500 focus:outline-none">
+                <option value="">-- Gửi Trực Tiếp Tại Kênh Đang Chat --</option>
+                <option value="DM">-- Gửi Tin Nhắn Riêng (DM) --</option>
+                <% textChannels.forEach(function(ch) { %>
+                  <option value="<%= ch.id %>" <%= config.level_up_channel_id === ch.id ? 'selected' : '' %>># <%= ch.name %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-300 mb-2">🚀 Hệ Số Nhân XP Cho Role Ưu Tiên</label>
+              <select name="xpBoostMultiplier" class="w-full bg-[#171d2b] border border-gray-800 rounded-xl p-3 text-white focus:border-amber-500 focus:outline-none">
+                <option value="2" <%= (config.xp_boost_multiplier == 2) ? 'selected' : '' %>>x2 XP (Gấp đôi)</option>
+                <option value="3" <%= (config.xp_boost_multiplier == 3) ? 'selected' : '' %>>x3 XP (Gấp ba)</option>
+                <option value="5" <%= (config.xp_boost_multiplier == 5) ? 'selected' : '' %>>x5 XP (Gấp năm)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="block text-xs font-medium text-amber-400 mb-2">👑 Role Ưu Tiên Tích XP (Giữ Ctrl để chọn nhiều):</label>
+            <select name="xpBoostRoles" multiple class="w-full bg-[#171d2b] border border-gray-800 rounded-xl p-3 text-white h-24 focus:border-amber-500 focus:outline-none">
+              <% roles.forEach(function(r) { %>
+                <option value="<%= r.id %>" <%= (config.xp_boost_roles || '').split(',').includes(r.id) ? 'selected' : '' %>>@<%= r.name %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-xs font-medium text-gray-300 mb-1">🚫 Kênh Cấm Tích XP (Giữ Ctrl để chọn nhiều):</label>
+              <select name="noXpChannels" multiple class="w-full bg-[#171d2b] border border-gray-800 rounded-xl p-3 text-white h-28 focus:border-amber-500 focus:outline-none">
+                <% textChannels.forEach(function(ch) { %>
+                  <option value="<%= ch.id %>" <%= (config.no_xp_channels || '').split(',').includes(ch.id) ? 'selected' : '' %>># <%= ch.name %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-300 mb-1">🚫 Role Cấm Tích XP (Giữ Ctrl để chọn nhiều):</label>
+              <select name="noXpRoles" multiple class="w-full bg-[#171d2b] border border-gray-800 rounded-xl p-3 text-white h-28 focus:border-amber-500 focus:outline-none">
+                <% roles.forEach(function(r) { %>
+                  <option value="<%= r.id %>" <%= (config.no_xp_roles || '').split(',').includes(r.id) ? 'selected' : '' %>>@<%= r.name %></option>
+                <% }) %>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="bg-[#121824] border border-gray-800/80 rounded-2xl p-6">
+          <h3 class="text-base font-bold text-emerald-400 mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-shield-halved"></i> 5. Bảo Mật, AutoRole & Đếm Quân Số
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-300 mb-2">⏳ Tuổi Acc Tối Thiểu (Anti-Alt)</label>
+              <div class="flex items-center">
+                <input type="number" name="accountAgeDays" value="<%= config.account_age_days || 0 %>" min="0" class="w-full bg-[#171d2b] border border-gray-800 rounded-l-xl p-3 text-white focus:border-emerald-500 focus:outline-none">
+                <span class="bg-[#1e2638] text-gray-400 text-xs px-3 py-3.5 border border-l-0 border-gray-800 rounded-r-xl">Ngày</span>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-300 mb-2">✅ Role Cấp Sau Khi Verify</label>
+              <select name="verifyRoleId" class="w-full bg-[#171d2b] border border-gray-800 rounded-xl p-3 text-white focus:border-emerald-500 focus:outline-none">
+                <option value="">-- Tắt Verify --</option>
+                <% roles.forEach(function(r) { %>
+                  <option value="<%= r.id %>" <%= config.verify_role_id === r.id ? 'selected' : '' %>>@<%= r.name %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-300 mb-2">🔊 Kênh Voice Đếm Member</label>
+              <select name="memberCountChannelId" class="w-full bg-[#171d2b] border border-gray-800 rounded-xl p-3 text-white focus:border-emerald-500 focus:outline-none">
+                <option value="">-- Tắt Đếm --</option>
+                <% voiceChannels.forEach(function(vc) { %>
+                  <option value="<%= vc.id %>" <%= config.member_count_channel_id === vc.id ? 'selected' : '' %>>🔊 <%= vc.name %></option>
+                <% }) %>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-gray-300 mb-2">🏷️ AutoRoles (Giữ Ctrl để chọn nhiều):</label>
+            <select name="autoRoles" multiple class="w-full bg-[#171d2b] border border-gray-800 rounded-xl p-3 text-white h-28 focus:border-emerald-500 focus:outline-none">
+              <% roles.forEach(function(r) { %>
+                <option value="<%= r.id %>" <%= (config.auto_roles || '').split(',').includes(r.id) ? 'selected' : '' %>>@<%= r.name %></option>
+              <% }) %>
+            </select>
+          </div>
+        </section>
+
+        <section class="bg-[#121824] border border-gray-800/80 rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-800">
+            <h3 class="text-base font-bold text-pink-500 flex items-center gap-2">
+              <i class="fa-solid fa-gift"></i> 6. Quản Lý Giveaway & Điều Kiện Tham Gia
+            </h3>
+          </div>
+
+          <div class="bg-[#171d2b] p-4 rounded-xl border border-gray-800 mb-6 space-y-4">
+            <h4 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-plus-circle text-emerald-400"></i> 1. Thông Tin Cơ Bản
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-[11px] font-medium text-gray-400 mb-1">📢 Chọn Kênh Đăng</label>
+                <select id="gw_channel" class="w-full bg-[#10141d] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-pink-500 focus:outline-none">
+                  <% textChannels.forEach(function(ch) { %>
+                    <option value="<%= ch.id %>"># <%= ch.name %></option>
+                  <% }) %>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-gray-400 mb-1">🎁 Tên Phần Thưởng</label>
+                <input type="text" id="gw_prize" placeholder="Ví dụ: Role VIP, 50k VNĐ" class="w-full bg-[#10141d] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-pink-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-gray-400 mb-1">⏱️ Thời Gian (10m, 2h, 1d)</label>
+                <input type="text" id="gw_duration" placeholder="10m / 2h / 1d" class="w-full bg-[#10141d] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-pink-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-gray-400 mb-1">🏆 Số Giải Thắng</label>
+                <input type="number" id="gw_winners" value="1" min="1" class="w-full bg-[#10141d] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-pink-500 focus:outline-none">
+              </div>
+            </div>
+
+            <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider pt-2 flex items-center gap-1.5 border-t border-gray-800/60">
+              <i class="fa-solid fa-list-check"></i> 2. Thiết Lập Điều Kiện Tham Gia (Nâng Cao)
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-[11px] font-medium text-gray-400 mb-1">👑 Role Bắt Buộc Có</label>
+                <select id="gw_req_role" class="w-full bg-[#10141d] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-amber-500 focus:outline-none">
+                  <option value="">-- Không yêu cầu --</option>
+                  <% roles.forEach(function(r) { %>
+                    <option value="<%= r.id %>">@<%= r.name %></option>
+                  <% }) %>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-gray-400 mb-1">⏳ Tuổi Acc Discord Tối Thiểu (Ngày)</label>
+                <input type="number" id="gw_min_acc" value="7" min="0" class="w-full bg-[#10141d] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-amber-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-gray-400 mb-1">📌 Đã Vào Server Tối Thiểu (Giờ)</label>
+                <input type="number" id="gw_min_server" value="24" min="0" class="w-full bg-[#10141d] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-amber-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-gray-400 mb-1">⚡ Yêu Cầu Level Tối Thiểu</label>
+                <input type="number" id="gw_min_level" value="0" min="0" class="w-full bg-[#10141d] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-amber-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-gray-400 mb-1">💬 Số Tin Nhắn Tối Thiểu</label>
+                <input type="number" id="gw_min_messages" value="0" min="0" class="w-full bg-[#10141d] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-amber-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-gray-400 mb-1">👥 Số Người Tham Gia Tối Thiểu</label>
+                <input type="number" id="gw_min_participants" value="0" min="0" class="w-full bg-[#10141d] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-amber-500 focus:outline-none">
+              </div>
+            </div>
+
+            <h4 class="text-xs font-bold text-pink-400 uppercase tracking-wider pt-2 flex items-center gap-1.5 border-t border-gray-800/60">
+              <i class="fa-solid fa-user-gear"></i> 3. Chỉ Định Người Thắng (Mặc Định Random)
+            </h4>
+            <div id="rigged_container" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+
+            <button type="button" onclick="createGiveaway()" class="bg-pink-700 hover:bg-pink-600 text-white font-bold text-xs px-5 py-2.5 rounded-lg transition flex items-center gap-1.5 mt-3">
+              <i class="fa-solid fa-paper-plane"></i> Phát Giveaway Tự Động
+            </button>
+          </div>
+
+          <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <i class="fa-solid fa-clock-rotate-left"></i> Lịch Sử Lượt Trao Giải
+          </h4>
+          <% if (history && history.length > 0) { %>
+            <div class="overflow-x-auto mb-6">
+              <table class="w-full text-left border-collapse text-xs text-gray-300">
+                <thead>
+                  <tr class="border-b border-gray-800 text-gray-400 bg-[#171d2b]">
+                    <th class="py-2.5 px-3">Phần Thưởng</th>
+                    <th class="py-2.5 px-3">Người Nhận Giải</th>
+                    <th class="py-2.5 px-3">Người Trao Giải</th>
+                    <th class="py-2.5 px-3 text-right">Thời Gian</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-800/50">
+                  <% history.forEach(function(h) { %>
+                    <tr>
+                      <td class="py-2.5 px-3 font-bold text-amber-400"><%= h.prize %></td>
+                      <td class="py-2.5 px-3 text-emerald-400 font-medium">🎁 <%= h.winner_tag %> (<%= h.winner_id %>)</td>
+                      <td class="py-2.5 px-3 text-gray-300">👑 <%= h.hosted_by %></td>
+                      <td class="py-2.5 px-3 text-right text-gray-500"><%= h.created_at %></td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <p class="text-gray-500 text-xs italic mb-6">Chưa có lịch sử nhận giải nào.</p>
+          <% } %>
+
+          <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">📋 Danh Sách Sự Kiện Gần Đây</h4>
+          <% if (giveaways && giveaways.length > 0) { %>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs text-gray-300">
+                <thead>
+                  <tr class="border-b border-gray-800 text-gray-400">
+                    <th class="py-2.5 px-3">Phần Thưởng</th>
+                    <th class="py-2.5 px-3">Số Giải</th>
+                    <th class="py-2.5 px-3">Trạng Thái</th>
+                    <th class="py-2.5 px-3 text-right">Hành Động</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-800/50">
+                  <% giveaways.forEach(function(gw) { %>
+                    <tr>
+                      <td class="py-3 px-3 font-bold text-white"><%= gw.prize %></td>
+                      <td class="py-3 px-3"><%= gw.winners_count %> Người</td>
+                      <td class="py-3 px-3">
+                        <% if (gw.ended === 1) { %>
+                          <span class="px-2 py-0.5 text-[10px] rounded-full bg-gray-800 text-gray-400 font-medium">Đã Kết Thúc</span>
+                        <% } else { %>
+                          <span class="px-2 py-0.5 text-[10px] rounded-full bg-emerald-900/50 text-emerald-400 border border-emerald-500/30 font-medium animate-pulse">Đang Chạy</span>
+                        <% } %>
+                      </td>
+                      <td class="py-3 px-3 text-right space-x-1">
+                        <% if (gw.ended === 0) { %>
+                          <button type="button" onclick="endGiveaway('<%= gw.message_id %>')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[11px] transition">
+                            Kết Thúc Ngay
+                          </button>
+                        <% } else { %>
+                          <button type="button" onclick="rerollGiveaway('<%= gw.message_id %>')" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[11px] transition">
+                            <i class="fa-solid fa-rotate"></i> Reroll
+                          </button>
+                        <% } %>
+                        <button type="button" onclick="deleteGiveaway('<%= gw.message_id %>')" class="px-2.5 py-1 bg-gray-800 hover:bg-red-900/80 text-red-400 rounded-lg text-[11px] transition border border-gray-700">
+                          <i class="fa-solid fa-trash"></i> Xóa
+                        </button>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <p class="text-gray-500 text-xs italic">Chưa có sự kiện Giveaway nào được tạo trong máy chủ này.</p>
+          <% } %>
+        </section>
+
+        <section class="bg-[#121824] border border-gray-800/80 rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-800">
+            <h3 class="text-base font-bold text-red-500 flex items-center gap-2">
+              <i class="fa-solid fa-shield-cat"></i> 7. Cấu Hình 13 Kênh Security Logs
+            </h3>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-[11px] font-medium text-gray-300 mb-1">📜 Server Log</label>
+              <select name="serverLogChannelId" class="w-full bg-[#171d2b] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-red-600 focus:outline-none">
+                <option value="">-- Tắt Log --</option>
+                <% textChannels.forEach(function(ch) { %>
+                  <option value="<%= ch.id %>" <%= config.server_log_channel_id === ch.id ? 'selected' : '' %>># <%= ch.name %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-medium text-gray-300 mb-1">👤 Member Log</label>
+              <select name="memberLogChannelId" class="w-full bg-[#171d2b] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-red-600 focus:outline-none">
+                <option value="">-- Tắt Log --</option>
+                <% textChannels.forEach(function(ch) { %>
+                  <option value="<%= ch.id %>" <%= config.member_log_channel_id === ch.id ? 'selected' : '' %>># <%= ch.name %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-medium text-gray-300 mb-1">🛡️ Moderation Log</label>
+              <select name="moderationLogChannelId" class="w-full bg-[#171d2b] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-red-600 focus:outline-none">
+                <option value="">-- Tắt Log --</option>
+                <% textChannels.forEach(function(ch) { %>
+                  <option value="<%= ch.id %>" <%= config.moderation_log_channel_id === ch.id ? 'selected' : '' %>># <%= ch.name %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-medium text-gray-300 mb-1">🔐 Permission Log</label>
+              <select name="permissionLogChannelId" class="w-full bg-[#171d2b] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-red-600 focus:outline-none">
+                <option value="">-- Tắt Log --</option>
+                <% textChannels.forEach(function(ch) { %>
+                  <option value="<%= ch.id %>" <%= config.permission_log_channel_id === ch.id ? 'selected' : '' %>># <%= ch.name %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-medium text-gray-300 mb-1">🎭 Role Log</label>
+              <select name="roleLogChannelId" class="w-full bg-[#171d2b] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-red-600 focus:outline-none">
+                <option value="">-- Tắt Log --</option>
+                <% textChannels.forEach(function(ch) { %>
+                  <option value="<%= ch.id %>" <%= config.role_log_channel_id === ch.id ? 'selected' : '' %>># <%= ch.name %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-medium text-gray-300 mb-1">📁 Channel Log</label>
+              <select name="channelLogChannelId" class="w-full bg-[#171d2b] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-red-600 focus:outline-none">
+                <option value="">-- Tắt Log --</option>
+                <% textChannels.forEach(function(ch) { %>
+                  <option value="<%= ch.id %>" <%= config.channel_log_channel_id === ch.id ? 'selected' : '' %>># <%= ch.name %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-medium text-gray-300 mb-1">💬 Message Log</label>
+              <select name="messageLogChannelId" class="w-full bg-[#171d2b] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-red-600 focus:outline-none">
+                <option value="">-- Tắt Log --</option>
+                <% textChannels.forEach(function(ch) { %>
+                  <option value="<%= ch.id %>" <%= config.message_log_channel_id === ch.id ? 'selected' : '' %>># <%= ch.name %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-medium text-gray-300 mb-1">🔊 Voice Log</label>
+              <select name="voiceLogChannelId" class="w-full bg-[#171d2b] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-red-600 focus:outline-none">
+                <option value="">-- Tắt Log --</option>
+                <% textChannels.forEach(function(ch) { %>
+                  <option value="<%= ch.id %>" <%= config.voice_log_channel_id === ch.id ? 'selected' : '' %>># <%= ch.name %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-medium text-gray-300 mb-1">🔗 Invite Log</label>
+              <select name="inviteLogChannelId" class="w-full bg-[#171d2b] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-red-600 focus:outline-none">
+                <option value="">-- Tắt Log --</option>
+                <% textChannels.forEach(function(ch) { %>
+                  <option value="<%= ch.id %>" <%= config.invite_log_channel_id === ch.id ? 'selected' : '' %>># <%= ch.name %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-medium text-gray-300 mb-1">🚨 Security Log (Anti-Link Spam)</label>
+              <select name="securityLogChannelId" class="w-full bg-[#171d2b] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-red-600 focus:outline-none">
+                <option value="">-- Tắt Log --</option>
+                <% textChannels.forEach(function(ch) { %>
+                  <option value="<%= ch.id %>" <%= config.security_log_channel_id === ch.id ? 'selected' : '' %>># <%= ch.name %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-medium text-gray-300 mb-1">☢️ Anti-Nuke Log</label>
+              <select name="antiNukeLogChannelId" class="w-full bg-[#171d2b] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-red-600 focus:outline-none">
+                <option value="">-- Tắt Log --</option>
+                <% textChannels.forEach(function(ch) { %>
+                  <option value="<%= ch.id %>" <%= config.anti_nuke_log_channel_id === ch.id ? 'selected' : '' %>># <%= ch.name %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-medium text-gray-300 mb-1">🥖 Anti-Raid Log</label>
+              <select name="antiRaidLogChannelId" class="w-full bg-[#171d2b] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-red-600 focus:outline-none">
+                <option value="">-- Tắt Log --</option>
+                <% textChannels.forEach(function(ch) { %>
+                  <option value="<%= ch.id %>" <%= config.anti_raid_log_channel_id === ch.id ? 'selected' : '' %>># <%= ch.name %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-medium text-gray-300 mb-1">🤖 Bot Log</label>
+              <select name="botLogChannelId" class="w-full bg-[#171d2b] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-red-600 focus:outline-none">
+                <option value="">-- Tắt Log --</option>
+                <% textChannels.forEach(function(ch) { %>
+                  <option value="<%= ch.id %>" <%= config.bot_log_channel_id === ch.id ? 'selected' : '' %>># <%= ch.name %></option>
+                <% }) %>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <button type="submit" class="bg-red-800 hover:bg-red-700 text-white font-bold px-8 py-3.5 rounded-xl transition shadow-lg shadow-red-900/40 flex items-center gap-2">
+          <i class="fa-solid fa-floppy-disk"></i> Lưu Tất Cả Cấu Hình Server
+        </button>
+      </form>
+    </main>
+  </div>
+
+  <script id="guild-members-data" type="application/json">
+    <%- JSON.stringify(guildMembers || []) %>
+  </script>
+
+  <script>
+    const sanguinisSwal = Swal.mixin({
+      customClass: {
+        popup: 'sanguinis-swal',
+        confirmButton: 'swal2-confirm',
+        cancelButton: 'swal2-cancel',
+      },
+      buttonsStyling: false,
+      backdrop: 'rgba(2, 4, 8, 0.72)',
+      allowOutsideClick: true,
+      color: '#f8fafc',
+      background: 'rgba(17, 24, 39, 0.98)',
+      confirmButtonText: 'Đồng ý',
+      cancelButtonText: 'Hủy',
+      reverseButtons: true,
+    });
+
+    function showSanguinisAlert({ icon = 'success', title = 'Thông báo', text = '', confirmButtonText = 'Đồng ý' } = {}) {
+      return sanguinisSwal.fire({
+        icon,
+        title,
+        text,
+        confirmButtonText,
+      });
+    }
+
+    function confirmSanguinisAction(title, text, callback) {
+      sanguinisSwal
+        .fire({
+          icon: 'warning',
+          title,
+          text,
+          showCancelButton: true,
+          confirmButtonText: 'Xác nhận',
+          cancelButtonText: 'Hủy',
+        })
+        .then((result) => {
+          if (result.isConfirmed && typeof callback === 'function') {
+            callback();
+          }
+        });
+    }
+
+    const guildMembersDataElement = document.getElementById('guild-members-data');
+    const guildMembers = guildMembersDataElement ? JSON.parse(guildMembersDataElement.textContent) : [];
+
+    function updateRiggedSelects() {
+      const winnersCount = parseInt(document.getElementById('gw_winners').value) || 1;
+      const container = document.getElementById('rigged_container');
+      container.innerHTML = '';
+
+      for (let i = 1; i <= winnersCount; i++) {
+        let optionsHtml = `<option value="RANDOM">🎲 Top ${i}: Ngẫu Nhiên (Random)</option>`;
+        guildMembers.forEach((m) => {
+          optionsHtml += `<option value="${m.id}">🎯 Top ${i}: ${m.username} (${m.tag})</option>`;
+        });
+
+        const div = document.createElement('div');
+        div.innerHTML = `
+          <label class="block text-[11px] font-medium text-gray-400 mb-1">Vị Trí Giải Top ${i}</label>
+          <select class="rigged-select w-full bg-[#10141d] border border-gray-800 rounded-lg p-2.5 text-xs text-white focus:border-pink-500 focus:outline-none">
+            ${optionsHtml}
+          </select>
+        `;
+        container.appendChild(div);
+      }
+    }
+
+    document.getElementById('gw_winners').addEventListener('input', updateRiggedSelects);
+    updateRiggedSelects();
+
+    async function sendTest(type) {
+      if (type === 'welcome') {
+        const welcomeChannel = document.querySelector('select[name="welcomeChannelId"]').value;
+        if (!welcomeChannel) {
+          return showSanguinisAlert({
+            icon: 'warning',
+            title: 'Chưa Chọn Kênh',
+            text: 'Vui lòng chọn Kênh Chào Mừng trước khi gửi tin nhắn thử nghiệm!',
+          });
+        }
+      }
+
+      if (type === 'goodbye') {
+        const leaveChannel = document.querySelector('select[name="leaveChannelId"]').value;
+        if (!leaveChannel) {
+          return showSanguinisAlert({
+            icon: 'warning',
+            title: 'Chưa Chọn Kênh',
+            text: 'Vui lòng chọn Kênh Tạm Biệt trước khi gửi tin nhắn thử nghiệm!',
+          });
+        }
+      }
+
+      const guildId = "<%= targetGuild.id %>";
+      const url = `/api/test-${type}/${guildId}`;
+      
+      try {
+        const res = await fetch(url, { method: 'POST' });
+        const data = await res.json();
+        showSanguinisAlert({
+          icon: res.ok ? 'success' : 'error',
+          title: res.ok ? 'Thành công' : 'Lỗi',
+          text: data.message,
+        });
+      } catch (err) {
+        showSanguinisAlert({
+          icon: 'error',
+          title: 'Không thể kết nối',
+          text: 'Không thể kết nối đến máy chủ để gửi tin nhắn test!',
+        });
+      }
+    }
+
+    async function endGiveaway(messageId) {
+      confirmSanguinisAction(
+        'Kết thúc Giveaway',
+        'Bạn có chắc muốn ép kết thúc ngay sự kiện Giveaway này?',
+        async () => {
+          try {
+            const res = await fetch(`/api/giveaway/end/${messageId}`, { method: 'POST' });
+            const data = await res.json();
+            showSanguinisAlert({
+              icon: res.ok ? 'success' : 'error',
+              title: res.ok ? 'Thành công' : 'Lỗi',
+              text: data.message,
+            });
+            if (res.ok) location.reload();
+          } catch (err) {
+            showSanguinisAlert({
+              icon: 'error',
+              title: 'Lỗi hệ thống',
+              text: 'Lỗi gửi yêu cầu kết thúc Giveaway!',
+            });
+          }
+        },
+      );
+    }
+
+    async function rerollGiveaway(messageId) {
+      try {
+        const res = await fetch(`/api/giveaway/reroll/${messageId}`, { method: 'POST' });
+        const data = await res.json();
+        showSanguinisAlert({
+          icon: res.ok ? 'success' : 'error',
+          title: res.ok ? 'Reroll thành công' : 'Lỗi reroll',
+          text: data.message,
+        });
+      } catch (err) {
+        showSanguinisAlert({
+          icon: 'error',
+          title: 'Lỗi hệ thống',
+          text: 'Lỗi gửi yêu cầu Reroll Giveaway!',
+        });
+      }
+    }
+
+    async function createGiveaway() {
+      const channelId = document.getElementById('gw_channel').value;
+      const prize = document.getElementById('gw_prize').value.trim();
+      const duration = document.getElementById('gw_duration').value.trim();
+      const winners = document.getElementById('gw_winners').value;
+      const requiredRoleId = document.getElementById('gw_req_role').value;
+      const minAccountAge = document.getElementById('gw_min_acc').value;
+      const minServerAge = document.getElementById('gw_min_server').value;
+      const minLevel = document.getElementById('gw_min_level').value;
+      const minMessages = document.getElementById('gw_min_messages').value;
+      const minParticipants = document.getElementById('gw_min_participants').value;
+      const riggedWinners = Array.from(document.querySelectorAll('.rigged-select')).map((s) => s.value);
+
+      if (!prize || !duration) {
+        return showSanguinisAlert({
+          icon: 'warning',
+          title: 'Thiếu thông tin',
+          text: 'Vui lòng nhập Tên Phần Thưởng và Thời Gian!',
+        });
+      }
+
+      const guildId = "<%= targetGuild.id %>";
+      try {
+        const res = await fetch(`/api/giveaway/create/${guildId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            channelId,
+            prize,
+            duration,
+            winners,
+            requiredRoleId,
+            minAccountAge,
+            minServerAge,
+            minLevel,
+            minMessages,
+            minParticipants,
+            riggedWinners,
+          })
+        });
+        const data = await res.json();
+        showSanguinisAlert({
+          icon: data.success ? 'success' : 'error',
+          title: data.success ? 'Tạo Giveaway' : 'Lỗi',
+          text: data.message,
+        });
+        if (data.success) location.reload();
+      } catch (err) {
+        showSanguinisAlert({
+          icon: 'error',
+          title: 'Lỗi hệ thống',
+          text: 'Lỗi gửi yêu cầu tạo Giveaway!',
+        });
+      }
+    }
+
+    async function deleteGiveaway(messageId) {
+      confirmSanguinisAction(
+        'Xóa Giveaway',
+        'Bạn có chắc muốn xóa bản ghi Giveaway này khỏi danh sách?',
+        async () => {
+          try {
+            const res = await fetch(`/api/giveaway/delete/${messageId}`, { method: 'POST' });
+            const data = await res.json();
+            showSanguinisAlert({
+              icon: data.success ? 'success' : 'error',
+              title: data.success ? 'Đã xóa' : 'Lỗi',
+              text: data.message,
+            });
+            if (data.success) location.reload();
+          } catch (err) {
+            showSanguinisAlert({
+              icon: 'error',
+              title: 'Lỗi hệ thống',
+              text: 'Lỗi xóa Giveaway!',
+            });
+          }
+        },
+      );
+    }
+  </script>
+</body>
+</html>
