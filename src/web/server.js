@@ -17,52 +17,89 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Bật trust proxy khi chạy trên Render / Reverse Proxy
-app.set("trust proxy", 1);
+app.set("trust proxy", true);
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
-// Cấu hình Session lưu bền vững vào File SQLite
+// Cấu hình Session lưu bền vững vào File SQLite với cơ chế an toàn
+let sessionStore;
+try {
+  sessionStore = new SQLiteStore({
+    db: "sessions.sqlite",
+    dir: path.join(__dirname, "../../"),
+    createDirIfNotExists: true,
+  });
+} catch (e) {
+  console.warn("⚠️ [SESSION] Fallback MemoryStore:", e.message);
+  sessionStore = new session.MemoryStore();
+}
+
 app.use(
   session({
-    store: new SQLiteStore({
-      db: "sessions.sqlite",
-      dir: path.join(__dirname, "../../"),
-    }),
+    store: sessionStore,
     secret: process.env.SESSION_SECRET || "sanguinis_secret_2026",
     resave: false,
     saveUninitialized: false,
     cookie: {
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      secure: process.env.NODE_ENV === "production",
+      secure: "auto",
+      sameSite: "lax",
     },
   }),
 );
 
-passport.serializeUser((user, done) => done(null, user));
+passport.serializeUser((user, done) => {
+  // Tối ưu hóa kích thước session, chỉ lưu các trường cần thiết
+  const minimalUser = {
+    id: user.id,
+    username: user.username,
+    discriminator: user.discriminator,
+    avatar: user.avatar,
+    guilds: (user.guilds || []).map((g) => ({
+      id: g.id,
+      name: g.name,
+      icon: g.icon,
+      permissions: g.permissions,
+      owner: g.owner,
+    })),
+  };
+  done(null, minimalUser);
+});
 passport.deserializeUser((obj, done) => done(null, obj));
 
-// Xác định Callback URL động: ưu tiên biến DASHBOARD_URL / RENDER_EXTERNAL_URL nếu có
-const BASE_URL =
+// Chuẩn hóa và làm sạch biến môi trường OAuth
+const CLIENT_ID = (process.env.CLIENT_ID || "").trim().replace(/^["']|["']$/g, "");
+const CLIENT_SECRET = (process.env.CLIENT_SECRET || "").trim().replace(/^["']|["']$/g, "");
+
+// Xác định Callback URL động và khử triệt để dấu gạch chéo cuối gây lỗi redirect_uri_mismatch
+let rawBaseUrl =
   process.env.DASHBOARD_URL ||
   (process.env.RENDER_EXTERNAL_HOSTNAME
     ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}`
     : `http://localhost:${PORT}`);
 
-if (process.env.CLIENT_ID && process.env.CLIENT_SECRET) {
+const BASE_URL = rawBaseUrl.trim().replace(/^["']|["']$/g, "").replace(/\/+$/, "");
+const CALLBACK_URL = `${BASE_URL}/auth/discord/callback`;
+
+console.log(`🌐 [SANGUINIS WEB] BASE_URL: ${BASE_URL}`);
+console.log(`🔗 [SANGUINIS OAUTH] Callback URL: ${CALLBACK_URL}`);
+
+if (CLIENT_ID && CLIENT_SECRET) {
   passport.use(
     new Strategy(
       {
-        clientID: process.env.CLIENT_ID,
-        clientSecret: process.env.CLIENT_SECRET,
-        callbackURL: `${BASE_URL}/auth/discord/callback`,
+        clientID: CLIENT_ID,
+        clientSecret: CLIENT_SECRET,
+        callbackURL: CALLBACK_URL,
         scope: ["identify", "guilds"],
-        prompt: "none",
       },
       (accessToken, refreshToken, profile, done) =>
         process.nextTick(() => done(null, profile)),
     ),
   );
+} else {
+  console.warn("⚠️ [SANGUINIS OAUTH] Thiếu CLIENT_ID hoặc CLIENT_SECRET trong Environment Variables!");
 }
 
 app.use(passport.initialize());
@@ -76,14 +113,93 @@ function isAuth(req, res, next) {
 }
 
 app.get("/auth/discord", (req, res, next) => {
-  passport.authenticate("discord", { prompt: "none" })(req, res, next);
+  passport.authenticate("discord")(req, res, next);
 });
 
-app.get(
-  "/auth/discord/callback",
-  passport.authenticate("discord", { failureRedirect: "/" }),
-  (req, res) => res.redirect("/dashboard"),
-);
+app.get("/auth/discord/callback", (req, res, next) => {
+  if (req.query.error) {
+    console.warn(`⚠️ [OAUTH_DENIED] Người dùng từ chối hoặc Discord báo lỗi: ${req.query.error_description || req.query.error}`);
+    return res.redirect("/");
+  }
+
+  passport.authenticate("discord", (err, user, info) => {
+    if (err) {
+      console.error("❌ [OAUTH_ERROR] Chi tiết lỗi khi xác thực Discord Callback:", err);
+
+      let errorDetails = err.message || "Lỗi không xác định";
+      let helpMsg = "Vui lòng kiểm tra lại cấu hình tài khoản và đường link trong Discord Developer Portal.";
+
+      // Bóc tách chi tiết nếu là lỗi từ Discord Token API
+      if (err.oauthError && err.oauthError.data) {
+        try {
+          const parsed = JSON.parse(err.oauthError.data);
+          errorDetails = `${parsed.error}: ${parsed.error_description || ""}`;
+          if (parsed.error === "redirect_uri_mismatch") {
+            helpMsg = `Redirect URI trên Discord Developer Portal chưa khớp!\n\nCallback URL chuẩn hiện tại của Bot là:\n👉 ${CALLBACK_URL}\n\nHãy vào Discord Developer Portal -> Ứng dụng -> OAuth2 -> Redirects để thêm chính xác URL trên.`;
+          } else if (parsed.error === "invalid_client") {
+            helpMsg = `Client Secret trên Render không đúng hoặc đã bị Reset!\n\nHãy vào Discord Developer Portal -> OAuth2 -> Nhấn "Reset Secret" và dán Secret mới vào biến CLIENT_SECRET trên Render.`;
+          } else if (parsed.error === "invalid_grant") {
+            helpMsg = `Mã xác thực (code) đã hết hạn hoặc đã được sử dụng. Vui lòng bấm "Thử Lại" để đăng nhập lại.`;
+          }
+        } catch (_) {
+          errorDetails = err.oauthError.data;
+        }
+      }
+
+      return res.status(500).send(`
+        <!DOCTYPE html>
+        <html lang="vi">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Lỗi Xác Thực • SANGUINIS</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+        </head>
+        <body class="bg-[#08080a] text-gray-200 min-h-screen flex items-center justify-center p-4 font-sans">
+          <div class="max-w-lg w-full bg-[#121218] border border-red-900/60 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-red-950/50 text-center">
+            <div class="w-16 h-16 rounded-2xl bg-red-950/80 border border-red-800/60 flex items-center justify-center text-3xl mx-auto mb-4 text-red-500">
+              🩸
+            </div>
+            <h1 class="text-xl font-bold text-white uppercase tracking-wider mb-2">LỖI XÁC THỰC OAUTH2 DISCORD</h1>
+            <p class="text-xs text-red-400 font-mono bg-red-950/40 p-3 rounded-xl border border-red-900/40 mb-4 text-left break-all">
+              ${errorDetails}
+            </p>
+            <div class="text-left bg-[#0c0c10] p-4 rounded-xl border border-gray-800 mb-5 text-xs text-gray-300 space-y-2">
+              <p class="font-bold text-amber-400">📌 Hướng dẫn khắc phục:</p>
+              <p class="text-[11px] text-gray-400 whitespace-pre-line leading-relaxed">${helpMsg}</p>
+              <div class="pt-2 border-t border-gray-800">
+                <span class="text-gray-400 text-[10px] uppercase font-bold block mb-1">Redirect URI chuẩn cần có trong Discord Developer Portal:</span>
+                <code class="text-emerald-400 font-mono text-[11px] select-all bg-black/60 px-2 py-1 rounded block break-all">${CALLBACK_URL}</code>
+              </div>
+            </div>
+            <div class="flex gap-3">
+              <a href="/auth/discord" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white font-bold text-xs uppercase tracking-wider transition">
+                Thử Lại
+              </a>
+              <a href="/" class="py-3 px-5 rounded-xl bg-[#181820] hover:bg-[#222230] text-gray-300 font-bold text-xs uppercase tracking-wider transition">
+                Về Trang Chủ
+              </a>
+            </div>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+
+    if (!user) {
+      console.warn("⚠️ [OAUTH_NO_USER] Không tìm thấy thông tin User từ Discord:", info);
+      return res.redirect("/");
+    }
+
+    req.logIn(user, (loginErr) => {
+      if (loginErr) {
+        console.error("❌ [LOGIN_ERROR] Lỗi khi lưu User vào Session:", loginErr);
+        return next(loginErr);
+      }
+      return res.redirect("/dashboard");
+    });
+  })(req, res, next);
+});
 
 app.get("/logout", (req, res) => {
   req.logout(() => {
@@ -95,6 +211,16 @@ app.get("/logout", (req, res) => {
 
 app.get("/", (req, res) => {
   res.render("home", { clientId: process.env.CLIENT_ID });
+});
+
+// Điều Khoản Dịch Vụ (Terms of Service)
+app.get("/terms", (req, res) => {
+  res.render("terms");
+});
+
+// Chính Sách Bảo Mật (Privacy Policy)
+app.get("/privacy", (req, res) => {
+  res.render("privacy");
 });
 
 app.get("/dashboard", isAuth, (req, res) => {
@@ -1031,5 +1157,33 @@ app.post("/api/giveaway/delete/:messageId", isAuth, async (req, res) => {
 //     `🔗 [SANGUINIS OAUTH] Callback URL: ${BASE_URL}/auth/discord/callback`,
 //   );
 // });
+
+// Global Error Handler để tránh hiển thị lỗi 500 trắng trang mặc định
+app.use((err, req, res, next) => {
+  console.error("❌ [EXPRESS_GLOBAL_ERROR]", err);
+  if (res.headersSent) return next(err);
+  res.status(500).send(`
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head>
+      <meta charset="UTF-8">
+      <title>Lỗi Hệ Thống • SANGUINIS</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-[#08080a] text-gray-200 min-h-screen flex items-center justify-center p-4 font-sans">
+      <div class="max-w-md w-full bg-[#121218] border border-red-900/60 rounded-2xl p-6 text-center shadow-2xl">
+        <div class="text-3xl mb-3">🩸</div>
+        <h2 class="text-lg font-bold text-white mb-2 uppercase">HỆ THỐNG GẶP SỰ CỐ</h2>
+        <p class="text-xs text-red-400 font-mono bg-red-950/40 p-3 rounded-xl border border-red-900/40 mb-4 text-left break-all">
+          ${err.message || "Lỗi máy chủ nội bộ (Internal Server Error)"}
+        </p>
+        <a href="/" class="inline-block py-2.5 px-6 rounded-xl bg-gradient-to-r from-red-900 to-red-700 text-white font-bold text-xs uppercase tracking-wider transition hover:from-red-800 hover:to-red-600">
+          Quay lại Trang Chủ
+        </a>
+      </div>
+    </body>
+    </html>
+  `);
+});
 
 module.exports = app;
