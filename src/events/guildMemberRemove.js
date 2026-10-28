@@ -43,8 +43,13 @@ module.exports = {
 
     // 🔴 3. GỬI TIN NHẮN TẠM BIỆT CÔNG KHAI (Xử lý tên hiển thị chuẩn đẹp)
     if (config.leave_channel_id) {
-      const channel = member.guild.channels.cache.get(config.leave_channel_id);
-      if (channel) {
+      let channel = member.guild.channels.cache.get(config.leave_channel_id);
+      if (!channel) {
+        channel = await member.guild.channels
+          .fetch(config.leave_channel_id)
+          .catch(() => null);
+      }
+      if (channel && channel.isTextBased()) {
         let bodyText = (
           config.leave_message || "**{user}** đã rời khỏi máy chủ {guild}."
         )
@@ -71,7 +76,7 @@ module.exports = {
           .setFooter({ text: `ID Thành Viên: ${member.id}` })
           .setTimestamp();
 
-        await channel.send({ embeds: [embed] }).catch(() => {});
+        await channel.send({ embeds: [embed] }).catch((err) => console.error("[LEAVE_SEND_ERROR]", err));
       }
     }
 

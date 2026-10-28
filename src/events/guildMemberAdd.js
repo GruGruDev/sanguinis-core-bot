@@ -3,7 +3,7 @@ const db = require("../database/client");
 const { sendLog, LOG_COLORS } = require("../utils/logger");
 
 const DEFAULT_WELCOME_GIF =
-  "https://media.giphy.com/media/NbdKvBAIga3KxkAGeH/giphy.gif";
+  "https://media.giphy.com/media/vVjkN5PFzWizSI3wKn/giphy.gif";
 
 module.exports = {
   name: Events.GuildMemberAdd,
@@ -122,12 +122,18 @@ module.exports = {
 
     // 🔴 5. GỬI TIN NHẮN CHÀO MỪNG CÔNG KHAI
     if (config.welcome_channel_id && !member.user.bot) {
-      const channel = member.guild.channels.cache.get(
+      let channel = member.guild.channels.cache.get(
         config.welcome_channel_id,
       );
-      if (channel) {
+      if (!channel) {
+        channel = await member.guild.channels
+          .fetch(config.welcome_channel_id)
+          .catch(() => null);
+      }
+
+      if (channel && channel.isTextBased()) {
         let bodyText = (
-          config.welcome_message || "Chào mừng {user} đã gia nhập {guild} 🩸!"
+          config.welcome_message || "Chào mừng {user} đã gia nhập {guild} 🩸!\n\n📜 Hãy đọc kỹ luật tại các kênh chỉ định.\n⚔️ Rèn giũa kỹ năng và tiến vào phòng tuyến."
         )
           .replace(/{user}/g, `${member}`)
           .replace(/{guild}/g, member.guild.name)
@@ -142,7 +148,7 @@ module.exports = {
             : DEFAULT_WELCOME_GIF;
 
         const embed = new EmbedBuilder()
-          .setTitle(`🩸 CHÀO MỪNG THÀNH VIÊN MỚI!`)
+          .setTitle(`🩸 CHÀO MỪNG, ${member.user.username.toUpperCase()}`)
           .setColor("#800020")
           .setThumbnail(
             member.user.displayAvatarURL({ extension: "png", size: 1024 }),
@@ -150,13 +156,13 @@ module.exports = {
           .setDescription(bodyText)
           .setImage(bannerUrl)
           .setFooter({
-            text: `🩸 SANGUINIS AUDIT PROTOCOL • Quân số: #${member.guild.memberCount}`,
+            text: `Member #${member.guild.memberCount.toLocaleString("vi-VN")} • ID: ${member.id}`,
           })
           .setTimestamp();
 
         await channel
-          .send({ content: `${member}`, embeds: [embed] })
-          .catch(() => {});
+          .send({ content: `👋 Welcome ${member} 🩸`, embeds: [embed] })
+          .catch((err) => console.error("[WELCOME_SEND_ERROR]", err));
       }
     }
 
