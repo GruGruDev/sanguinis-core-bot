@@ -7,6 +7,7 @@ const commands = [];
 const commandsPath = path.join(__dirname, "src/commands");
 
 function getCommandFiles(dir) {
+  if (!fs.existsSync(dir)) return;
   const files = fs.readdirSync(dir);
   for (const file of files) {
     const filePath = path.join(dir, file);
@@ -23,25 +24,34 @@ function getCommandFiles(dir) {
 
 getCommandFiles(commandsPath);
 
-const rest = new REST().setToken(process.env.DISCORD_TOKEN);
+const token = process.env.DISCORD_TOKEN;
+const clientId = process.env.CLIENT_ID;
+const guildId = process.env.GUILD_ID || "1411553223306641521";
 
-// ID Server của bạn: 1411553223306641521
-const GUILD_ID = "1411553223306641521";
+if (!token || !clientId) {
+  console.error(
+    "❌ Thiếu DISCORD_TOKEN hoặc CLIENT_ID trong Environment Variables!",
+  );
+  process.exit(0); // Vẫn thoát 0 để index.js tiếp tục chạy
+}
+
+const rest = new REST({ version: "10" }).setToken(token);
 
 (async () => {
   try {
     console.log(
-      `🚀 Đang đăng ký ${commands.length} Slash Commands vào Guild (${GUILD_ID})...`,
+      `🚀 Đang đăng ký ${commands.length} Slash Commands vào Guild (${guildId})...`,
     );
 
-    // ⚡ Đăng ký trực tiếp vào Guild để hiện TỨC THÌ
-    await rest.put(
-      Routes.applicationGuildCommands(process.env.CLIENT_ID, GUILD_ID),
-      { body: commands },
-    );
+    await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+      body: commands,
+    });
 
     console.log("✅ Đã đăng ký tức thì toàn bộ Slash Commands vào Server!");
   } catch (error) {
-    console.error("❌ Lỗi deploy commands:", error);
+    console.error("❌ Lỗi deploy commands:", error.message || error);
+  } finally {
+    // 🔴 BẮT BUỘC: Ngắt tiến trình để nhường quyền cho lệnh tiếp theo chạy
+    process.exit(0);
   }
 })();

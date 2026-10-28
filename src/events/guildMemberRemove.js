@@ -77,8 +77,8 @@ module.exports = {
 
     // 🔴 4. MEMBER LOG (Đồng bộ với hệ thống Logger Security Logs)
     await sendLog(member.guild, "MEMBER", {
-      title: "📤 THÀNH VIÊN ĐÃ RỜI MÁY CHỦ",
-      color: "#ef4444",
+      title: "📤 [NHẬT KÝ QUÂN SỐ] THÀNH VIÊN ĐÃ RỜI PHÒNG TUYẾN",
+      color: "#dc2626", // #dc2626 Đỏ thẫm
       description: `Thành viên **${member.user.username}** (<@${member.id}>) vừa rời khỏi máy chủ.`,
       fields: [
         { name: "👤 User Tag", value: member.user.tag, inline: true },

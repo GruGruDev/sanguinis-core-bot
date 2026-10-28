@@ -17,6 +17,19 @@ const LOG_TYPES = {
   BOT: "bot_log_channel_id",
 };
 
+// Chuẩn bảng màu GEN SANGUINIS
+const LOG_COLORS = {
+  SUCCESS: "#10b981", // Xanh độc dược: Thêm mới / Member Join / Tạo Role/Kênh / Unban / Link mời
+  DANGER: "#dc2626",  // Đỏ thẫm: Xóa bỏ / Kick / Ban / Xóa Tin nhắn / Vi phạm / Anti-Nuke
+  MUTATE: "#8b5cf6",  // Tím Arcane: Chỉnh sửa phân quyền / Sửa tin nhắn / Cập nhật Server / Voice
+  WARN: "#f59e0b",    // Vàng kim: Cảnh báo bảo mật / Anti-Phishing phát hiện link lạ / Anti-Raid
+};
+
+const DEFAULT_FOOTER = "🩸 SANGUINIS AUDIT PROTOCOL • Hệ thống Giám sát Huyết Ấn";
+
+/**
+ * Gửi nhật ký Embed bảo mật chuẩn SANGUINIS với cơ chế Safe Fetching
+ */
 async function sendLog(
   guild,
   type,
@@ -35,15 +48,17 @@ async function sendLog(
     if (!config) return;
 
     const channelKey = LOG_TYPES[type];
+    if (!channelKey) return;
     const logChannelId = config[channelKey];
 
     if (!logChannelId || logChannelId.trim() === "") return;
 
-    // Fetch trực tiếp từ Discord API nếu Cache trống
-    const channel =
-      guild.channels.cache.get(logChannelId) ||
-      (await guild.channels.fetch(logChannelId).catch(() => null));
-    if (!channel) return;
+    // Safe Fetching: Dùng guild.channels.fetch nếu cache trống hoặc chưa tải xong
+    let channel = guild.channels.cache.get(logChannelId);
+    if (!channel) {
+      channel = await guild.channels.fetch(logChannelId).catch(() => null);
+    }
+    if (!channel || !channel.isTextBased()) return;
 
     const embed = new EmbedBuilder()
       .setTitle(title)
@@ -51,13 +66,16 @@ async function sendLog(
       .setDescription(description || null)
       .setTimestamp();
 
-    if (fields && fields.length > 0) embed.addFields(fields);
-    if (thumbnail) embed.setThumbnail(thumbnail);
-    if (footer) embed.setFooter({ text: footer });
-    else
-      embed.setFooter({
-        text: `Sanguinis Audit Logger • Server: ${guild.name}`,
-      });
+    if (fields && fields.length > 0) {
+      embed.addFields(fields);
+    }
+    if (thumbnail) {
+      embed.setThumbnail(thumbnail);
+    }
+
+    embed.setFooter({
+      text: footer || DEFAULT_FOOTER,
+    });
 
     await channel
       .send({ embeds: [embed] })
@@ -67,4 +85,9 @@ async function sendLog(
   }
 }
 
-module.exports = { sendLog, LOG_TYPES };
+module.exports = {
+  sendLog,
+  LOG_TYPES,
+  LOG_COLORS,
+  DEFAULT_FOOTER,
+};

@@ -26,9 +26,9 @@ module.exports = {
 
         // Gửi Log báo động an ninh
         await sendLog(message.guild, "SECURITY", {
-          title: "🚨 PHÁT HIỆN SỰ CỐ SPAM LINK DISCORD",
-          color: "#dc2626",
-          description: `Thành viên <@${message.author.id}> vừa gửi link mời server khác và đã bị **TỰ ĐỘNG XÓA TIN NHẮN**!`,
+          title: "🚨 [BÁO ĐỘNG AN NINH] PHÁT HIỆN LIÊN KẾT SPAM LẠ",
+          color: "#f59e0b", // #f59e0b Vàng kim: Cảnh báo bảo mật / Anti-Phishing
+          description: `Thành viên <@${message.author.id}> vừa phát tán liên kết mời không được kiểm chứng và đã bị **TỰ ĐỘNG THU HỒI TIN NHẮN**!`,
           fields: [
             {
               name: "👤 Người vi phạm",

@@ -1,4 +1,4 @@
-const { sendLog } = require("../utils/logger");
+const { sendLog, LOG_COLORS } = require("../utils/logger");
 
 module.exports = {
   name: "messageUpdate",
@@ -7,9 +7,9 @@ module.exports = {
     if (oldMessage.content === newMessage.content) return;
 
     await sendLog(oldMessage.guild, "MESSAGE", {
-      title: "✏️ TIN NHẮN ĐÃ BỊ CHỈNH SỬA",
-      color: "#f59e0b",
-      description: `Tin nhắn của <@${oldMessage.author.id}> tại kênh <#${oldMessage.channel.id}> vừa được sửa. [Xem tin nhắn](${newMessage.url})`,
+      title: "💬 [NHẬT KÝ TIN NHẮN] NỘI DUNG ĐÃ BỊ CHỈNH SỬA",
+      color: LOG_COLORS.MUTATE, // #8b5cf6 Tím Arcane
+      description: `Tin nhắn của <@${oldMessage.author.id}> tại kênh <#${oldMessage.channel.id}> vừa được chỉnh sửa. [Chuyển tới tin nhắn](${newMessage.url})`,
       fields: [
         {
           name: "📝 Trước khi sửa",

@@ -1,44 +1,171 @@
 <!DOCTYPE html>
 <html lang="vi">
-  <head>
-    <meta charset="UTF-8" />
-    <title>SANGUINIS - Discord Bot Việt Nam</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-  </head>
-  <body
-    class="bg-[#0b0e14] text-white min-h-screen flex flex-col justify-between p-8 font-sans"
-  >
-    <div class="max-w-4xl mx-auto text-center my-auto">
-      <div
-        class="w-24 h-24 rounded-3xl bg-red-900/80 border border-red-500/30 flex items-center justify-center text-5xl mx-auto mb-8 shadow-2xl shadow-red-900/50"
-      >
-        🩸
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SANGUINIS • Hội Kín Giám Sát Tối Cao</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #08080a;
+    }
+    
+    .font-arcane {
+      font-family: 'Cinzel', serif;
+    }
+
+    .blood-glow {
+      box-shadow: 0 0 35px rgba(220, 38, 38, 0.25);
+    }
+
+    .blood-glow-lg {
+      box-shadow: 0 0 60px rgba(153, 27, 27, 0.45);
+    }
+
+    .glass-card {
+      background: linear-gradient(135deg, rgba(18, 18, 24, 0.85) 0%, rgba(13, 13, 18, 0.95) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(153, 27, 27, 0.35);
+    }
+
+    .glass-card:hover {
+      border-color: rgba(239, 68, 68, 0.6);
+      box-shadow: 0 0 30px rgba(220, 38, 38, 0.2);
+    }
+  </style>
+</head>
+<body class="text-gray-200 min-h-screen flex flex-col justify-between selection:bg-red-900 selection:text-white overflow-x-hidden relative">
+
+  <!-- Ambient Blood Aura Background -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-gradient-to-b from-red-900/25 via-red-950/10 to-transparent blur-3xl rounded-full"></div>
+    <div class="absolute bottom-0 right-0 w-[500px] h-[500px] bg-red-950/15 blur-3xl rounded-full"></div>
+    <div class="absolute top-1/3 left-0 w-[400px] h-[400px] bg-red-950/10 blur-3xl rounded-full"></div>
+  </div>
+
+  <!-- Top Global Navigation Bar -->
+  <header class="relative z-10 w-full border-b border-red-950/60 bg-[#0d0d12]/80 backdrop-blur-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-red-950 via-red-900 to-black border border-red-700/50 flex items-center justify-center text-2xl shadow-[0_0_20px_rgba(220,38,38,0.3)]">
+          🩸
+        </div>
+        <div>
+          <span class="font-arcane tracking-[0.25em] text-white font-black text-xl leading-none block">SANGUINIS</span>
+          <span class="text-[10px] tracking-[0.3em] uppercase text-red-500 font-semibold">Giao Thức Huyết Ấn</span>
+        </div>
       </div>
-      <h1 class="text-6xl font-black text-red-600 tracking-wider mb-6">
-        SANGUINIS
-      </h1>
-      <p class="text-gray-400 text-xl mb-10 max-w-2xl mx-auto">
-        Hệ thống Bot Discord Mã Nguồn Mở & Dashboard Quản Lý Máy Chủ Tối Ưu Cho
-        Cộng Đồng Việt Nam
-      </p>
-      <div class="flex justify-center gap-6">
-        <a
-          href="https://discord.com/api/oauth2/authorize?client_id=<%= clientId %>&permissions=8&scope=bot%20applications.commands"
-          target="_blank"
-          class="bg-red-800 hover:bg-red-700 px-8 py-4 rounded-xl font-bold text-lg transition shadow-lg shadow-red-900/30"
-          ><i class="fa-solid fa-robot mr-2"></i> Thêm Bot Vào Server</a
-        >
-        <a
-          href="/dashboard"
-          class="bg-[#1a1f2e] hover:bg-[#252b3d] border border-gray-700 px-8 py-4 rounded-xl font-bold text-lg transition shadow-lg"
-          ><i class="fa-solid fa-right-to-bracket mr-2"></i> Đăng Nhập
-          Dashboard</a
-        >
+
+      <nav class="hidden md:flex items-center gap-8 text-xs font-semibold uppercase tracking-widest text-gray-400">
+        <a href="#features" class="hover:text-red-400 transition">Phòng Tuyến</a>
+        <a href="#protocols" class="hover:text-red-400 transition">Giao Thức Logs</a>
+        <a href="#leveling" class="hover:text-red-400 transition">Huyết Tháp</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <a href="/dashboard" class="h-11 px-6 rounded-xl bg-gradient-to-r from-red-900 via-red-800 to-red-700 hover:from-red-800 hover:to-red-600 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition duration-200 shadow-[0_0_20px_rgba(220,38,38,0.35)] border border-red-500/30">
+          <i class="fa-solid fa-crown text-amber-400"></i>
+          <span>Dashboard</span>
+        </a>
       </div>
     </div>
-  </body>
+  </header>
+
+  <!-- Hero Section -->
+  <main class="relative z-10 flex-1 flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 py-16 sm:py-24 max-w-6xl mx-auto text-center">
+    
+    <!-- Insignia Crest -->
+    <div class="relative mb-8 group">
+      <div class="absolute inset-0 bg-red-600/30 rounded-3xl blur-2xl group-hover:bg-red-600/50 transition duration-500"></div>
+      <div class="relative w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-gradient-to-br from-[#1c080d] via-[#12080a] to-[#08080a] border-2 border-red-700/60 flex items-center justify-center text-6xl sm:text-7xl shadow-[0_0_40px_rgba(220,38,38,0.4)]">
+        🩸
+      </div>
+      <div class="absolute -bottom-2 -right-2 w-9 h-9 rounded-full bg-red-950 border border-red-600 flex items-center justify-center text-sm shadow-[0_0_15px_rgba(239,68,68,0.6)]">
+        👁️
+      </div>
+    </div>
+
+    <!-- Title & Sovereign Motto -->
+    <h1 class="font-arcane text-4xl sm:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-red-200 to-red-600 tracking-wider mb-4 uppercase drop-shadow-md">
+      SANGUINIS CORE
+    </h1>
+
+    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-950/60 border border-red-700/40 text-red-400 text-xs font-semibold uppercase tracking-[0.2em] mb-6">
+      <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+      <span>Hội Kín Giám Sát Tối Cao • Arcane Security Protocol</span>
+    </div>
+
+    <p class="text-gray-300 text-base sm:text-lg lg:text-xl max-w-3xl mx-auto font-normal leading-relaxed mb-10 text-balance">
+      Hệ thống điều hành máy chủ Discord tối thượng mang phong cách <strong class="text-red-400 font-semibold">Arcane Gothic</strong> kết hợp <strong class="text-red-400 font-semibold">Cyberpunk Dark Crimson Glassmorphism</strong>. Kiểm soát toàn diện 13 phòng tuyến an ninh, thăng hoa cảnh giới Huyết Tháp XP và phát khởi Chiến Lợi Phẩm.
+    </p>
+
+    <!-- Call to Actions -->
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto mb-16">
+      <a href="https://discord.com/api/oauth2/authorize?client_id=<%= clientId %>&permissions=8&scope=bot%20applications.commands" target="_blank" class="w-full sm:w-auto h-12 px-8 rounded-xl bg-gradient-to-r from-red-950 via-red-900 to-red-800 hover:from-red-900 hover:to-red-700 border border-red-600/50 text-white font-bold text-sm tracking-wider uppercase flex items-center justify-center gap-3 transition duration-200 shadow-[0_0_30px_rgba(220,38,38,0.35)]">
+        <i class="fa-solid fa-shield-halved text-red-400 text-lg"></i>
+        <span>Ủy Thác Bot Vào Server</span>
+      </a>
+
+      <a href="/dashboard" class="w-full sm:w-auto h-12 px-8 rounded-xl bg-[#121218]/90 hover:bg-[#1a1a24] border border-red-950/80 hover:border-red-600/40 text-gray-200 hover:text-white font-bold text-sm tracking-wider uppercase flex items-center justify-center gap-3 transition duration-200 backdrop-blur-xl">
+        <i class="fa-solid fa-fingerprint text-red-500 text-lg"></i>
+        <span>Đăng Nhập Dashboard</span>
+      </a>
+    </div>
+
+    <!-- 4 Core Pillars of Sanguinis -->
+    <div id="features" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 w-full text-left">
+      <div class="glass-card rounded-2xl p-6 transition duration-300">
+        <div class="w-12 h-12 rounded-xl bg-red-950/80 border border-red-800/40 flex items-center justify-center text-2xl mb-4 text-red-500">
+          👁️
+        </div>
+        <h3 class="font-bold text-white text-base mb-2">13 Kênh Security Logs</h3>
+        <p class="text-xs text-gray-400 leading-relaxed">Giám sát toàn diện từ Ban/Kick, chỉnh sửa tin nhắn, hoán chuyển phòng thoại đến phân quyền kênh.</p>
+      </div>
+
+      <div class="glass-card rounded-2xl p-6 transition duration-300">
+        <div class="w-12 h-12 rounded-xl bg-red-950/80 border border-red-800/40 flex items-center justify-center text-2xl mb-4 text-emerald-500">
+          🛡️
+        </div>
+        <h3 class="font-bold text-white text-base mb-2">Phòng Tuyến Anti-Raid</h3>
+        <p class="text-xs text-gray-400 leading-relaxed">Quét tự động tuổi tài khoản Discord, thanh trừng nick clone, cấp ấn Verify và Voice Counter quân số.</p>
+      </div>
+
+      <div class="glass-card rounded-2xl p-6 transition duration-300">
+        <div class="w-12 h-12 rounded-xl bg-red-950/80 border border-red-800/40 flex items-center justify-center text-2xl mb-4 text-amber-500">
+          🔮
+        </div>
+        <h3 class="font-bold text-white text-base mb-2">Huyết Tháp Leveling</h3>
+        <p class="text-xs text-gray-400 leading-relaxed">Cơ chế tích lũy kinh nghiệm ma thuật, phân bổ hệ số Boost x2/x3/x5 cho Role ưu tiên và thiết lập kênh cấm.</p>
+      </div>
+
+      <div class="glass-card rounded-2xl p-6 transition duration-300">
+        <div class="w-12 h-12 rounded-xl bg-red-950/80 border border-red-800/40 flex items-center justify-center text-2xl mb-4 text-red-400">
+          🏆
+        </div>
+        <h3 class="font-bold text-white text-base mb-2">Kho Chiến Lợi Phẩm</h3>
+        <p class="text-xs text-gray-400 leading-relaxed">Tổ chức sự kiện Giveaway với điều kiện ngặt nghèo: tuổi acc, level, số tin nhắn cùng cơ chế Reroll chuẩn xác.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="relative z-10 w-full border-t border-red-950/60 bg-[#08080a]/90 backdrop-blur-xl py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+      <div class="flex items-center gap-2">
+        <span class="text-red-600 font-bold">🩸 SANGUINIS AUDIT PROTOCOL</span>
+        <span>•</span>
+        <span>Hội Kín Giám Sát Tối Cao</span>
+      </div>
+      <div class="text-gray-500 text-[11px] font-mono">
+        BẢO MẬT TUYỆT ĐỐI • MÃ NGUỒN MỞ VIỆT NAM
+      </div>
+    </div>
+  </footer>
+
+</body>
 </html>

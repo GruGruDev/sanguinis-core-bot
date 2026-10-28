@@ -1,4 +1,4 @@
-const { sendLog } = require("../utils/logger");
+const { sendLog, LOG_COLORS } = require("../utils/logger");
 
 module.exports = {
   name: "guildUpdate",
@@ -24,9 +24,9 @@ module.exports = {
     if (changes.length === 0) return;
 
     await sendLog(newGuild, "SERVER", {
-      title: "📜 THAY ĐỔI CẤU HÌNH MÁY CHỦ",
-      color: "#f59e0b",
-      description: `Cấu hình máy chủ **${newGuild.name}** vừa được cập nhật:`,
+      title: "📜 [NHẬT KÝ MÁY CHỦ] CẬP NHẬT CẤU HÌNH",
+      color: LOG_COLORS.MUTATE, // #8b5cf6 Tím Arcane
+      description: `Cấu hình máy chủ **${newGuild.name}** vừa có sự biến chuyển:`,
       fields: [{ name: "📋 Chi Tiết Thay Đổi", value: changes.join("\n") }],
       thumbnail: newGuild.iconURL(),
     });

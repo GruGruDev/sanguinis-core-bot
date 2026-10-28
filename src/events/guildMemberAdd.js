@@ -1,6 +1,6 @@
 const { Events, EmbedBuilder } = require("discord.js");
 const db = require("../database/client");
-const { sendLog } = require("../utils/logger");
+const { sendLog, LOG_COLORS } = require("../utils/logger");
 
 const DEFAULT_WELCOME_GIF =
   "https://media.giphy.com/media/NbdKvBAIga3KxkAGeH/giphy.gif";
@@ -17,9 +17,27 @@ module.exports = {
     );
     if (!config) return;
 
-    // 🔴 1. KIỂM TRA TUỔI TÀI KHOẢN (ANTI-ALT / ANTI-RAID)
+    // 🔴 1. KIỂM TRA BOT MỚI (BOT LOG)
+    if (member.user.bot) {
+      await sendLog(member.guild, "BOT", {
+        title: "🤖 ỦY THÁC ỨNG DỤNG / BOT MỚI",
+        color: LOG_COLORS.SUCCESS,
+        description: `Bot <@${member.id}> (\`${member.user.tag}\`) vừa được thêm vào máy chủ **${member.guild.name}**.`,
+        fields: [
+          { name: "🆔 Bot ID", value: `\`${member.id}\``, inline: true },
+          {
+            name: "📅 Ngày Khởi Tạo",
+            value: `<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,
+            inline: true,
+          },
+        ],
+        thumbnail: member.user.displayAvatarURL(),
+      });
+    }
+
+    // 🔴 2. KIỂM TRA TUỔI TÀI KHOẢN (ANTI-ALT / ANTI-RAID)
     const minAgeDays = Number(config.account_age_days) || 0;
-    if (minAgeDays > 0) {
+    if (minAgeDays > 0 && !member.user.bot) {
       const createdTimestamp = member.user.createdTimestamp;
       const accountAgeDays =
         (Date.now() - createdTimestamp) / (1000 * 60 * 60 * 24);
@@ -31,12 +49,12 @@ module.exports = {
 
         // Gửi Log Báo Động sang kênh anti-raid-log
         await sendLog(member.guild, "ANTI_RAID", {
-          title: "🥖 PHÁT HIỆN ACC CLONE (ANTI-RAID)",
-          color: "#dc2626",
-          description: `Thành viên <@${member.id}> gia nhập có tuổi tài khoản chỉ **${accountAgeDays.toFixed(1)} ngày** (Yêu cầu tối thiểu: **${minAgeDays} ngày**). Bot đã tự động KICK!`,
+          title: "🛡️ PHÒNG TUYẾN ANTI-RAID: TRỤC XUẤT CLONE",
+          color: LOG_COLORS.DANGER,
+          description: `Thành viên <@${member.id}> có tuổi tài khoản chỉ **${accountAgeDays.toFixed(1)} ngày** (Yêu cầu tối thiểu: **${minAgeDays} ngày**). Phòng tuyến đã tự động TRỤC XUẤT (Kick)!`,
           fields: [
             {
-              name: "👤 Tài khoản",
+              name: "👤 Danh tính",
               value: `${member.user.tag} (\`${member.id}\`)`,
               inline: true,
             },
@@ -51,35 +69,37 @@ module.exports = {
 
         await member
           .send(
-            `❌ Tài khoản của bạn không đủ điều kiện tham gia **${member.guild.name}** (Yêu cầu tuổi tài khoản tối thiểu: ${minAgeDays} ngày).`,
+            `❌ Bạn không đủ điều kiện gia nhập **${member.guild.name}** do tài khoản chưa đủ tuổi tối thiểu (${minAgeDays} ngày).`,
           )
           .catch(() => {});
 
         await member
-          .kick("Tài khoản chưa đủ tuổi tối thiểu (Anti-Alt Check)")
+          .kick("Tài khoản chưa đủ tuổi tối thiểu (Sanguinis Anti-Alt Check)")
           .catch(() => {});
         return; // Dừng các bước tiếp theo
       }
     }
 
-    // 🔴 2. GỬI MEMBER LOG (Kênh member-log cho BQL)
-    await sendLog(member.guild, "MEMBER", {
-      title: "📥 THÀNH VIÊN MỚI GIA NHẬP",
-      color: "#22c55e",
-      description: `<@${member.id}> vừa tham gia máy chủ **${member.guild.name}**.`,
-      fields: [
-        { name: "👤 User Tag", value: member.user.tag, inline: true },
-        { name: "🆔 User ID", value: `\`${member.id}\``, inline: true },
-        {
-          name: "👥 Tổng Quân Số",
-          value: `\`${member.guild.memberCount}\` thành viên`,
-          inline: true,
-        },
-      ],
-      thumbnail: member.user.displayAvatarURL(),
-    });
+    // 🔴 3. GỬI MEMBER LOG (Kênh member-log cho BQL)
+    if (!member.user.bot) {
+      await sendLog(member.guild, "MEMBER", {
+        title: "👤 [NHẬT KÝ QUÂN SỐ] THÀNH VIÊN MỚI GIA NHẬP",
+        color: LOG_COLORS.SUCCESS,
+        description: `<@${member.id}> đã bước qua cổng thành **${member.guild.name}**.`,
+        fields: [
+          { name: "👤 User Tag", value: member.user.tag, inline: true },
+          { name: "🆔 User ID", value: `\`${member.id}\``, inline: true },
+          {
+            name: "👥 Tổng Quân Số",
+            value: `\`${member.guild.memberCount.toLocaleString("vi-VN")}\` người`,
+            inline: true,
+          },
+        ],
+        thumbnail: member.user.displayAvatarURL(),
+      });
+    }
 
-    // 🔴 3. TỰ ĐỘNG GÁN ROLE BAN ĐẦU (Ví dụ: @Outsider)
+    // 🔴 4. TỰ ĐỘNG GÁN ROLE BAN ĐẦU (Auto Roles)
     if (config.auto_roles) {
       const autoRoleIds = config.auto_roles
         .split(",")
@@ -100,8 +120,8 @@ module.exports = {
       }
     }
 
-    // 🔴 4. GỬI TIN NHẮN CHÀO MỪNG CÔNG KHAI
-    if (config.welcome_channel_id) {
+    // 🔴 5. GỬI TIN NHẮN CHÀO MỪNG CÔNG KHAI
+    if (config.welcome_channel_id && !member.user.bot) {
       const channel = member.guild.channels.cache.get(
         config.welcome_channel_id,
       );
@@ -110,7 +130,11 @@ module.exports = {
           config.welcome_message || "Chào mừng {user} đã gia nhập {guild} 🩸!"
         )
           .replace(/{user}/g, `${member}`)
-          .replace(/{guild}/g, member.guild.name);
+          .replace(/{guild}/g, member.guild.name)
+          .replace(
+            /{memberCount}/g,
+            member.guild.memberCount.toLocaleString("vi-VN"),
+          );
 
         const bannerUrl =
           config.welcome_banner_url && config.welcome_banner_url.trim() !== ""
@@ -125,7 +149,9 @@ module.exports = {
           )
           .setDescription(bodyText)
           .setImage(bannerUrl)
-          .setFooter({ text: `ID: ${member.id}` })
+          .setFooter({
+            text: `🩸 SANGUINIS AUDIT PROTOCOL • Quân số: #${member.guild.memberCount}`,
+          })
           .setTimestamp();
 
         await channel
@@ -134,8 +160,12 @@ module.exports = {
       }
     }
 
-    // 🔴 5. GỬI DM KHI JOIN (NẾU BẬT)
-    if (Number(config.dm_welcome_enabled) === 1 && config.dm_welcome_message) {
+    // 🔴 6. GỬI DM KHI JOIN (NẾU BẬT)
+    if (
+      Number(config.dm_welcome_enabled) === 1 &&
+      config.dm_welcome_message &&
+      !member.user.bot
+    ) {
       let dmText = config.dm_welcome_message
         .replace(/{user}/g, `${member.user.username}`)
         .replace(/{guild}/g, member.guild.name);
