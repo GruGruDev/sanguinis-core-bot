@@ -4,12 +4,20 @@ const SQLiteStore = require("connect-sqlite3")(session);
 const passport = require("passport");
 const { Strategy } = require("passport-discord");
 const path = require("path");
-const { EmbedBuilder } = require("discord.js");
+const {
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} = require("discord.js");
 const db = require("../database/client");
 const { client } = require("../bot");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Bật trust proxy khi chạy trên Render / Reverse Proxy
+app.set("trust proxy", 1);
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -26,6 +34,7 @@ app.use(
     saveUninitialized: false,
     cookie: {
       maxAge: 7 * 24 * 60 * 60 * 1000,
+      secure: process.env.NODE_ENV === "production",
     },
   }),
 );
@@ -33,13 +42,20 @@ app.use(
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((obj, done) => done(null, obj));
 
+// Xác định Callback URL động: ưu tiên biến DASHBOARD_URL / RENDER_EXTERNAL_URL nếu có
+const BASE_URL =
+  process.env.DASHBOARD_URL ||
+  (process.env.RENDER_EXTERNAL_HOSTNAME
+    ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}`
+    : `http://localhost:${PORT}`);
+
 if (process.env.CLIENT_ID && process.env.CLIENT_SECRET) {
   passport.use(
     new Strategy(
       {
         clientID: process.env.CLIENT_ID,
         clientSecret: process.env.CLIENT_SECRET,
-        callbackURL: `http://localhost:${PORT}/auth/discord/callback`,
+        callbackURL: `${BASE_URL}/auth/discord/callback`,
         scope: ["identify", "guilds"],
         prompt: "none",
       },
@@ -196,7 +212,6 @@ app.post("/api/config/:guildId", isAuth, async (req, res) => {
     accountAgeDays,
     verifyRoleId,
     memberCountChannelId,
-    // 🔴 13 KÊNH SECURITY LOGS
     serverLogChannelId,
     moderationLogChannelId,
     permissionLogChannelId,
@@ -317,7 +332,7 @@ app.post("/api/config/:guildId", isAuth, async (req, res) => {
   res.redirect(`/dashboard/${guildId}`);
 });
 
-// 🔴 API GỠ CẢNH CÁO KHỎI HỆ THỐNG
+// API GỠ CẢNH CÁO
 app.post("/api/warn/delete/:warnId", isAuth, async (req, res) => {
   const { warnId } = req.params;
   const database = db.getDb();
@@ -335,7 +350,7 @@ app.post("/api/warn/delete/:warnId", isAuth, async (req, res) => {
   }
 });
 
-// 🔴 API ÉP KẾT THÚC GIVEAWAY NGAY TỨC THÌ
+// API ÉP KẾT THÚC GIVEAWAY
 app.post("/api/giveaway/end/:messageId", isAuth, async (req, res) => {
   const { messageId } = req.params;
   const database = db.getDb();
@@ -356,7 +371,7 @@ app.post("/api/giveaway/end/:messageId", isAuth, async (req, res) => {
   }
 });
 
-// 🔴 API QUAY SỐ LẠI NGƯỜI THẮNG (REROLL)
+// API QUAY SỐ LẠI NGƯỜI THẮNG (REROLL)
 app.post("/api/giveaway/reroll/:messageId", isAuth, async (req, res) => {
   const { messageId } = req.params;
   const database = db.getDb();
@@ -606,7 +621,7 @@ app.post("/api/test-dm-leave/:guildId", isAuth, async (req, res) => {
   }
 });
 
-// 🔴 API TẠO GIVEAWAY ĐẦY ĐỦ ĐIỀU KIỆN
+// API TẠO GIVEAWAY
 app.post("/api/giveaway/create/:guildId", isAuth, async (req, res) => {
   const { guildId } = req.params;
   const {
@@ -680,18 +695,11 @@ app.post("/api/giveaway/create/:guildId", isAuth, async (req, res) => {
         ? `\n\n📌 **ĐIỀU KIỆN THAM GIA:**\n${reqText.join("\n")}`
         : "";
 
-    const {
-      EmbedBuilder,
-      ActionRowBuilder,
-      ButtonBuilder,
-      ButtonStyle,
-    } = require("discord.js");
-
     const embed = new EmbedBuilder()
       .setTitle(`🎉 GIVEAWAY: ${prize.toUpperCase()}`)
       .setColor("#800020")
       .setDescription(
-        `Nhấn vào nút **"🎉 Tham Gia"** bên dưới để tham gia sự kiện!${condFormatted}\n\n• **Người tổ chức:** <@${req.user.id}>\n• **Số giải thắng:** \`${winnersCount}\`\n• **Kết thúc:** <t:${endTimestamp}:R> (<t:${endTimestamp}:f>)`,
+        `Nhấn vào nút **"🎉 Tham Gia"** bên dưới để tham gia sự kiện!${condFormatted}\n\n**Người tổ chức:** <@${req.user.id}>\n**Số giải thắng:** \`${winnersCount}\`\n**Kết thúc:** <t:${endTimestamp}:R> (<t:${endTimestamp}:f>)`,
       )
       .setFooter({ text: "Sanguinis Event System • 0 Lượt Tham Gia" })
       .setTimestamp(endTime);
@@ -748,7 +756,7 @@ app.post("/api/giveaway/create/:guildId", isAuth, async (req, res) => {
   }
 });
 
-// 🔴 API XÓA GIVEAWAY KHỎI DATABASE & DASHBOARD
+// API XÓA GIVEAWAY
 app.post("/api/giveaway/delete/:messageId", isAuth, async (req, res) => {
   const { messageId } = req.params;
   const database = db.getDb();
@@ -770,6 +778,14 @@ app.post("/api/giveaway/delete/:messageId", isAuth, async (req, res) => {
       .status(500)
       .json({ success: false, message: "❌ Không thể xóa Giveaway!" });
   }
+});
+
+// LẮNG NGHE PORT VÀ BIND 0.0.0.0 ĐỂ RENDER NHẬN DIỆN NGAY LẬP TỨC
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🌐 [SANGUINIS WEB] Dashboard đang lắng nghe tại port: ${PORT}`);
+  console.log(
+    `🔗 [SANGUINIS OAUTH] Callback URL: ${BASE_URL}/auth/discord/callback`,
+  );
 });
 
 module.exports = app;
