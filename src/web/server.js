@@ -133,12 +133,19 @@ app.get("/auth/discord/callback", (req, res, next) => {
       if (err.oauthError && err.oauthError.data) {
         try {
           const parsed = JSON.parse(err.oauthError.data);
-          errorDetails = `${parsed.error}: ${parsed.error_description || ""}`;
-          if (parsed.error === "redirect_uri_mismatch") {
-            helpMsg = `Redirect URI trên Discord Developer Portal chưa khớp!\n\nCallback URL chuẩn hiện tại của Bot là:\n👉 ${CALLBACK_URL}\n\nHãy vào Discord Developer Portal -> Ứng dụng -> OAuth2 -> Redirects để thêm chính xác URL trên.`;
-          } else if (parsed.error === "invalid_client") {
-            helpMsg = `Client Secret trên Render không đúng hoặc đã bị Reset!\n\nHãy vào Discord Developer Portal -> OAuth2 -> Nhấn "Reset Secret" và dán Secret mới vào biến CLIENT_SECRET trên Render.`;
-          } else if (parsed.error === "invalid_grant") {
+          const errCode = parsed.error || (parsed.code ? `Code ${parsed.code}` : "OAuthError");
+          const errDesc = parsed.error_description || parsed.message || JSON.stringify(parsed);
+          errorDetails = `${errCode}: ${errDesc}`;
+
+          if (errCode === "redirect_uri_mismatch" || (errDesc && errDesc.includes("redirect_uri"))) {
+            helpMsg = `Redirect URI trên Discord Developer Portal chưa khớp!\n\nCallback URL chuẩn hiện tại của Bot là:\n👉 ${CALLBACK_URL}\n\nHãy vào Discord Developer Portal -> Ứng dụng -> OAuth2 -> Redirects để thêm chính xác URL trên và bấm Save Changes.`;
+          } else if (
+            errCode === "invalid_client" ||
+            err.oauthError.statusCode === 401 ||
+            (errDesc && (errDesc.includes("Unauthorized") || errDesc.includes("invalid_client") || errDesc.includes("401")))
+          ) {
+            helpMsg = `Client Secret trên Render không khớp hoặc bạn vừa bấm "Đặt lại Secret" (Reset Secret)!\n\n👉 Khi bạn bấm "Đặt lại Secret" trên Discord, Secret cũ sẽ bị hủy ngay lập tức. Bạn cần copy Secret MỚI hiển thị trên Discord và dán vào biến môi trường CLIENT_SECRET trên Render Dashboard -> Save Changes.`;
+          } else if (errCode === "invalid_grant" || (errDesc && errDesc.includes("code"))) {
             helpMsg = `Mã xác thực (code) đã hết hạn hoặc đã được sử dụng. Vui lòng bấm "Thử Lại" để đăng nhập lại.`;
           }
         } catch (_) {
