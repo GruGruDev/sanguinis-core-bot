@@ -93,6 +93,11 @@ if (CLIENT_ID && CLIENT_SECRET) {
         clientSecret: CLIENT_SECRET,
         callbackURL: CALLBACK_URL,
         scope: ["identify", "guilds"],
+        authorizationURL: "https://discord.com/api/v10/oauth2/authorize",
+        tokenURL: "https://discord.com/api/v10/oauth2/token",
+        customHeaders: {
+          "User-Agent": "DiscordBot (https://sanguinis-core-bot.onrender.com, 1.0.0)",
+        },
       },
       (accessToken, refreshToken, profile, done) =>
         process.nextTick(() => done(null, profile)),
@@ -126,7 +131,7 @@ app.get("/auth/discord/callback", (req, res, next) => {
     if (err) {
       console.error("❌ [OAUTH_ERROR] Chi tiết lỗi khi xác thực Discord Callback:", err);
 
-      let errorDetails = err.message || "Lỗi không xác định";
+      let errorDetails = err.message || (err.code ? `Code: ${err.code}` : "Lỗi không xác định");
       let helpMsg = "Vui lòng kiểm tra lại cấu hình tài khoản và đường link trong Discord Developer Portal.";
 
       // Bóc tách chi tiết nếu là lỗi từ Discord Token API
@@ -137,7 +142,9 @@ app.get("/auth/discord/callback", (req, res, next) => {
           const errDesc = parsed.error_description || parsed.message || JSON.stringify(parsed);
           errorDetails = `${errCode}: ${errDesc}`;
 
-          if (errCode === "redirect_uri_mismatch" || (errDesc && errDesc.includes("redirect_uri"))) {
+          if (err.oauthError.statusCode === 429 || (errDesc && errDesc.includes("rate limits"))) {
+            helpMsg = `⏳ BẠN ĐANG BỊ DISCORD GIỚI HẠN RATE LIMIT (HTTP 429)!\n\nDo vừa gửi quá nhiều yêu cầu liên tiếp trong lúc đổi Secret, Cloudflare của Discord đã tạm chặn IP máy chủ Render trong 10-15 phút.\n\n👉 CÁCH GIẢI QUYẾT NGAY LẬP TỨC:\nVào Render Dashboard -> bấm vào nút "Manual Deploy" -> chọn "Restart service" (hoặc "Clear build cache & deploy"). Render sẽ cấp một IP mới sạch để bạn đăng nhập lại được ngay!`;
+          } else if (errCode === "redirect_uri_mismatch" || (errDesc && errDesc.includes("redirect_uri"))) {
             helpMsg = `Redirect URI trên Discord Developer Portal chưa khớp!\n\nCallback URL chuẩn hiện tại của Bot là:\n👉 ${CALLBACK_URL}\n\nHãy vào Discord Developer Portal -> Ứng dụng -> OAuth2 -> Redirects để thêm chính xác URL trên và bấm Save Changes.`;
           } else if (
             errCode === "invalid_client" ||
