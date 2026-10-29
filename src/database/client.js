@@ -1,7 +1,10 @@
-const { Pool } = require("pg");
+const { Pool, types } = require("pg");
 const sqlite3 = require("sqlite3");
 const { open } = require("sqlite");
 const path = require("path");
+
+// Tự động parse BIGINT (int8 - OID 20) thành Number trong JS thay vì String
+types.setTypeParser(20, (val) => parseInt(val, 10));
 
 let dbInstance = null;
 
@@ -181,7 +184,6 @@ async function initDb() {
       );
     `);
 
-    // Migration an toàn cho các cột mới nếu bảng đã có sẵn
     const columnsToMigrate = [
       { name: "welcome_banner_url", type: "TEXT DEFAULT ''" },
       { name: "leave_banner_url", type: "TEXT DEFAULT ''" },

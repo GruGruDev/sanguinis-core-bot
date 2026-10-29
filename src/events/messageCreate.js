@@ -4,7 +4,8 @@ const { sendLog } = require("../utils/logger");
 
 // Công thức tính XP cần để lên cấp (Arcane standard)
 function getXpForLevel(level) {
-  return 5 * level ** 2 + 50 * level + 100;
+  const lvl = parseInt(level, 10) || 1;
+  return 5 * lvl ** 2 + 50 * lvl + 100;
 }
 
 module.exports = {
@@ -27,7 +28,7 @@ module.exports = {
         // Gửi Log báo động an ninh
         await sendLog(message.guild, "SECURITY", {
           title: "🚨 [BÁO ĐỘNG AN NINH] PHÁT HIỆN LIÊN KẾT SPAM LẠ",
-          color: "#f59e0b", // #f59e0b Vàng kim: Cảnh báo bảo mật / Anti-Phishing
+          color: "#f59e0b",
           description: `Thành viên <@${message.author.id}> vừa phát tán liên kết mời không được kiểm chứng và đã bị **TỰ ĐỘNG THU HỒI TIN NHẮN**!`,
           fields: [
             {
@@ -84,7 +85,7 @@ module.exports = {
       message.author.id,
     ]);
     const now = Math.floor(Date.now() / 1000);
-    const cooldown = config.cooldown || 60;
+    const cooldown = parseInt(config.cooldown, 10) || 60;
 
     if (!user) {
       await database.run(
@@ -98,13 +99,16 @@ module.exports = {
         level: 1,
         last_xp_time: now,
       };
-    } else if (now - (user.last_xp_time || 0) < cooldown) {
-      return; // Đang trong thời gian Cooldown
+    } else {
+      const lastXpTime = parseInt(user.last_xp_time, 10) || 0;
+      if (now - lastXpTime < cooldown) {
+        return; // Đang trong thời gian Cooldown
+      }
     }
 
     // 🔴 5. TÍNH XP RANDOM & HỆ SỐ BOOST (X2/X3/X5 XP)
-    const minXp = config.min_xp || 15;
-    const maxXp = config.max_xp || 25;
+    const minXp = parseInt(config.min_xp, 10) || 15;
+    const maxXp = parseInt(config.max_xp, 10) || 25;
     let xpGained = Math.floor(Math.random() * (maxXp - minXp + 1)) + minXp;
 
     if (config.xp_boost_roles) {
@@ -113,13 +117,17 @@ module.exports = {
         boostRoles.includes(r.id),
       );
       if (hasBoostRole) {
-        const multiplier = config.xp_boost_multiplier || 2;
+        const multiplier = parseInt(config.xp_boost_multiplier, 10) || 2;
         xpGained *= multiplier;
       }
     }
 
-    const newXp = user.xp + xpGained;
-    let newLevel = user.level;
+    // ÉP KIỂU SỐ HỌC TUYỆT ĐỐI ĐỂ CHỐNG NỐI CHUỖI
+    const currentXp = parseInt(user.xp, 10) || 0;
+    let currentLevel = parseInt(user.level, 10) || 1;
+    const newXp = currentXp + xpGained;
+
+    let newLevel = currentLevel;
     let neededXp = getXpForLevel(newLevel);
     let leveledUp = false;
 
@@ -152,6 +160,8 @@ module.exports = {
         .setFooter({ text: `Sanguinis Leveling System • Arcane Style` })
         .setTimestamp();
 
+      const successContent = `🎉 Chúc mừng ${message.author} đã đạt level **${newLevel}**! 🎊`;
+
       if (config.level_up_channel_id === "DM") {
         await message.author.send({ embeds: [embed] }).catch(() => {});
       } else if (
@@ -164,14 +174,14 @@ module.exports = {
         if (targetChannel) {
           await targetChannel
             .send({
-              content: `🎉 Chúc mừng ${message.author} đã đạt level **${newLevel}**! 🎊`,
+              content: successContent,
               embeds: [embed],
             })
             .catch(() => {});
         } else {
           await message.channel
             .send({
-              content: `🎉 Chúc mừng ${message.author} đã đạt level **${newLevel}**! 🎊`,
+              content: successContent,
               embeds: [embed],
             })
             .catch(() => {});
@@ -179,7 +189,7 @@ module.exports = {
       } else {
         await message.channel
           .send({
-            content: `🎉 Chúc mừng ${message.author} đã đạt level **${newLevel}**! 🎊`,
+            content: successContent,
             embeds: [embed],
           })
           .catch(() => {});
