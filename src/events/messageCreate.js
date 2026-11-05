@@ -68,11 +68,14 @@ module.exports = {
     if (!config) return;
 
     // 🔴 1.5. GIỚI HẠN NƠI GỬI LINK / ẢNH / VIDEO (FIXED PLACE)
-    const mediaChannelId = (config.media_channel_id || "").trim();
-    if (mediaChannelId && !message.member.permissions.has("Administrator")) {
+    const allowedMediaChannels = (config.media_channel_id || "")
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean);
+    if (allowedMediaChannels.length && !message.member.permissions.has("Administrator")) {
       const hasLink = /https?:\/\/\S+/i.test(message.content || "");
       const hasAttachment = message.attachments && message.attachments.size > 0;
-      if ((hasLink || hasAttachment) && message.channel.id !== mediaChannelId) {
+      if ((hasLink || hasAttachment) && !allowedMediaChannels.includes(message.channel.id)) {
         await message.delete().catch(() => {});
 
         // Theo dõi spam
@@ -102,14 +105,14 @@ module.exports = {
         } catch (_) {}
 
         const warnText =
-          `⚠️ Bạn chỉ được gửi link, ảnh hoặc video tại kênh <#${mediaChannelId}>. ` +
+          `⚠️ Bạn chỉ được gửi link, ảnh hoặc video tại các kênh: ${allowedMediaChannels.map((id) => `<#${id}>`).join(", ")}. ` +
           `Tin nhắn của bạn đã bị thu hồi. (Vi phạm #${entry.count} - ${actionText})`;
         await message.author.send(warnText).catch(() => {});
 
         await sendLog(message.guild, "SECURITY", {
           title: "🔗 CẢNH BÁO: GỬI LINK/ẢNH/VIDEO SAI CHỖ",
           color: "#f59e0b",
-          description: `Thành viên <@${message.author.id}> gửi link/ảnh/video ngoài kênh cho phép <#${mediaChannelId}> và đã bị thu hồi.`,
+          description: `Thành viên <@${message.author.id}> gửi link/ảnh/video ngoài các kênh cho phép (${allowedMediaChannels.map((id) => `<#${id}>`).join(", ")}) và đã bị thu hồi.`,
           fields: [
             { name: "👤 Người vi phạm", value: `${message.author.tag} (${message.author.id})`, inline: true },
             { name: "📌 Kênh", value: `<#${message.channel.id}>`, inline: true },

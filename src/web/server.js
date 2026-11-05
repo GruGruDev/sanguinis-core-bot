@@ -374,6 +374,7 @@ app.post("/api/config/:guildId", isAuth, async (req, res) => {
     botLogChannelId,
     mediaChannelId,
   } = req.body;
+  if (Array.isArray(mediaChannelId)) mediaChannelId = mediaChannelId.join(",");
 
   if (Array.isArray(autoRoles)) autoRoles = autoRoles.join(",");
   if (Array.isArray(noXpChannels)) noXpChannels = noXpChannels.join(",");
