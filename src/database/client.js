@@ -180,7 +180,8 @@ async function initDb() {
         security_log_channel_id VARCHAR(64) DEFAULT '',
         anti_nuke_log_channel_id VARCHAR(64) DEFAULT '',
         anti_raid_log_channel_id VARCHAR(64) DEFAULT '',
-        bot_log_channel_id VARCHAR(64) DEFAULT ''
+        bot_log_channel_id VARCHAR(64) DEFAULT '',
+        media_channel_id VARCHAR(64) DEFAULT ''
       );
     `);
 
@@ -211,6 +212,7 @@ async function initDb() {
       { name: "anti_nuke_log_channel_id", type: "TEXT DEFAULT ''" },
       { name: "anti_raid_log_channel_id", type: "TEXT DEFAULT ''" },
       { name: "bot_log_channel_id", type: "TEXT DEFAULT ''" },
+       { name: "media_channel_id", type: "TEXT DEFAULT ''" },
     ];
 
     for (const col of columnsToMigrate) {
@@ -319,10 +321,12 @@ async function initDb() {
       security_log_channel_id TEXT DEFAULT '',
       anti_nuke_log_channel_id TEXT DEFAULT '',
       anti_raid_log_channel_id TEXT DEFAULT '',
-      bot_log_channel_id TEXT DEFAULT ''
+      bot_log_channel_id TEXT DEFAULT '',
+      media_channel_id TEXT DEFAULT ''
     );
   `);
 
+  try { await dbInstance.exec("ALTER TABLE guild_config ADD COLUMN media_channel_id TEXT DEFAULT '';"); } catch (e) {}
   console.log("✅ [DATABASE] Khởi tạo SQLite thành công!");
   return dbInstance;
 }

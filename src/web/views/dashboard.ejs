@@ -910,6 +910,18 @@
                 <p class="text-[11px] text-gray-500 mt-1.5">Tên kênh thoại sẽ tự đổi thành "👥 Thành Viên: [Số lượng]" mỗi khi có biến động.</p>
               </div>
 
+              <!-- Media/Link Channel -->
+              <div>
+                <label class="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-2">🔗 Kênh Cho Phép Link / Ảnh / Video</label>
+                <select name="mediaChannelId" class="w-full h-11 bg-[#101016] border border-red-950/80 rounded-xl px-3 text-base md:text-sm text-white focus:border-red-600 focus:outline-none">
+                  <option value="">-- Không áp dụng (Tắt) --</option>
+                  <% textChannels.forEach(function(ch) { %>
+                    <option value="<%= ch.id %>" <%= config.media_channel_id === ch.id ? 'selected' : '' %>># <%= ch.name %></option>
+                  <% }) %>
+                </select>
+                <p class="text-[11px] text-gray-500 mt-1.5">Chỉ cho phép gửi link, ảnh, video tại kênh này. Gửi sai chỗ sẽ bị thu hồi và cảnh báo; spam sẽ bị block/ban.</p>
+              </div>
+
             </div>
 
             <!-- Auto Roles -->

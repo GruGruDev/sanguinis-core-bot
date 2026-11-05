@@ -17,6 +17,78 @@ module.exports = {
     );
     if (!config) return;
 
+    // 🔴 0. THEO DÕI MÃ MỜI ĐƯỢC SỬ DỤNG (INVITE LOG)
+    if (!member.user.bot) {
+      try {
+        const guild = member.guild;
+        const client = bot;
+        const newInvites = await guild.invites.fetch().catch(() => null);
+        if (newInvites) {
+          const { getCache } = require("../utils/inviteTracker");
+          const cache = getCache(client);
+          const oldMap = cache.get(guild.id) || new Map();
+
+          let usedInvite = null;
+          for (const inv of newInvites.values()) {
+            const oldUses = oldMap.get(inv.code) || 0;
+            if ((inv.uses || 0) > oldUses) {
+              usedInvite = inv;
+              break;
+            }
+          }
+
+          // Cập nhật cache
+          const newMap = new Map();
+          newInvites.forEach((i) => newMap.set(i.code, i.uses || 0));
+          cache.set(guild.id, newMap);
+
+          if (usedInvite) {
+            await sendLog(guild, "INVITE", {
+              title: "✅ MÃ MỜI ĐƯỢC SỬ DỤNG",
+              color: "#10b981",
+              description: `<@${member.id}> đã gia nhập bằng mã mời \`${usedInvite.code}\` do <@${usedInvite.inviter?.id}> tạo.`,
+              fields: [
+                { name: "🔑 Mã Link", value: `\`${usedInvite.code}\``, inline: true },
+                {
+                  name: "👤 Người tạo",
+                  value: usedInvite.inviter ? `<@${usedInvite.inviter.id}>` : "Không rõ",
+                  inline: true,
+                },
+                {
+                  name: "📌 Kênh Đích",
+                  value: usedInvite.channel ? `<#${usedInvite.channel.id}>` : "N/A",
+                  inline: true,
+                },
+                {
+                  name: "👥 Lượt dùng",
+                  value: `${usedInvite.uses}/${usedInvite.maxUses === 0 ? "∞" : usedInvite.maxUses}`,
+                  inline: true,
+                },
+                {
+                  name: "⏱️ Hạn dùng",
+                  value:
+                    usedInvite.maxAge === 0
+                      ? "Vĩnh viễn"
+                      : `${usedInvite.maxAge / 3600} giờ`,
+                  inline: true,
+                },
+              ],
+              thumbnail: member.user.displayAvatarURL(),
+            });
+          } else {
+            await sendLog(guild, "INVITE", {
+              title: "❓ GIA NHẬP KHÔNG XÁC ĐỊNH MÃ MỜI",
+              color: "#f59e0b",
+              description: `<@${member.id}> đã gia nhập nhưng không xác định được mã mời (có thể do Vanity URL hoặc thiếu quyền).`,
+              thumbnail: member.user.displayAvatarURL(),
+            });
+          }
+        }
+      } catch (err) {
+        console.error("[INVITE_TRACK_ERROR]", err);
+      }
+    }
+
     // 🔴 1. KIỂM TRA BOT MỚI (BOT LOG)
     if (member.user.bot) {
       await sendLog(member.guild, "BOT", {

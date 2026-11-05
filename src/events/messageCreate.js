@@ -8,6 +8,8 @@ function getXpForLevel(level) {
   return 5 * lvl ** 2 + 50 * lvl + 100;
 }
 
+const spamTracker = new Map();
+
 module.exports = {
   name: Events.MessageCreate,
   async execute(message) {
@@ -64,6 +66,61 @@ module.exports = {
       [message.guild.id],
     );
     if (!config) return;
+
+    // 🔴 1.5. GIỚI HẠN NƠI GỬI LINK / ẢNH / VIDEO (FIXED PLACE)
+    const mediaChannelId = (config.media_channel_id || "").trim();
+    if (mediaChannelId && !message.member.permissions.has("Administrator")) {
+      const hasLink = /https?:\/\/\S+/i.test(message.content || "");
+      const hasAttachment = message.attachments && message.attachments.size > 0;
+      if ((hasLink || hasAttachment) && message.channel.id !== mediaChannelId) {
+        await message.delete().catch(() => {});
+
+        // Theo dõi spam
+        const key = `${message.guild.id}:${message.author.id}`;
+        const now = Date.now();
+        let entry = spamTracker.get(key);
+        if (!entry || now - entry.first > 10 * 60 * 1000) {
+          entry = { count: 0, first: now };
+        }
+        entry.count += 1;
+        spamTracker.set(key, entry);
+
+        let actionText = "Cảnh báo";
+        try {
+          if (entry.count >= 5) {
+            await message.guild.members.ban(message.author, {
+              reason: "Spam link/ảnh/video sai chỗ (Sanguinis)",
+            }).catch(() => {});
+            actionText = "BAN vĩnh viễn";
+          } else if (entry.count >= 3) {
+            await message.member.timeout(10 * 60 * 1000, "Spam link/ảnh/video sai chỗ (Sanguinis)").catch(() => {});
+            actionText = "Timeout 10 phút";
+          } else if (entry.count === 2) {
+            await message.member.timeout(5 * 60 * 1000, "Spam link/ảnh/video sai chỗ (Sanguinis)").catch(() => {});
+            actionText = "Timeout 5 phút";
+          }
+        } catch (_) {}
+
+        const warnText =
+          `⚠️ Bạn chỉ được gửi link, ảnh hoặc video tại kênh <#${mediaChannelId}>. ` +
+          `Tin nhắn của bạn đã bị thu hồi. (Vi phạm #${entry.count} - ${actionText})`;
+        await message.author.send(warnText).catch(() => {});
+
+        await sendLog(message.guild, "SECURITY", {
+          title: "🔗 CẢNH BÁO: GỬI LINK/ẢNH/VIDEO SAI CHỖ",
+          color: "#f59e0b",
+          description: `Thành viên <@${message.author.id}> gửi link/ảnh/video ngoài kênh cho phép <#${mediaChannelId}> và đã bị thu hồi.`,
+          fields: [
+            { name: "👤 Người vi phạm", value: `${message.author.tag} (${message.author.id})`, inline: true },
+            { name: "📌 Kênh", value: `<#${message.channel.id}>`, inline: true },
+            { name: "🔁 Vi phạm", value: `#${entry.count} - ${actionText}`, inline: true },
+          ],
+          thumbnail: message.author.displayAvatarURL(),
+        });
+
+        return; // Không cộng XP
+      }
+    }
 
     // 🔴 2. KIỂM TRA KÊNH CẤM TÍCH XP
     if (config.no_xp_channels) {

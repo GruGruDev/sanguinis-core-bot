@@ -372,6 +372,7 @@ app.post("/api/config/:guildId", isAuth, async (req, res) => {
     antiNukeLogChannelId,
     antiRaidLogChannelId,
     botLogChannelId,
+    mediaChannelId,
   } = req.body;
 
   if (Array.isArray(autoRoles)) autoRoles = autoRoles.join(",");
@@ -389,8 +390,8 @@ app.post("/api/config/:guildId", isAuth, async (req, res) => {
       member_log_channel_id, auto_roles, account_age_days, verify_role_id, member_count_channel_id,
       server_log_channel_id, moderation_log_channel_id, permission_log_channel_id, role_log_channel_id,
       channel_log_channel_id, message_log_channel_id, voice_log_channel_id, invite_log_channel_id,
-      security_log_channel_id, anti_nuke_log_channel_id, anti_raid_log_channel_id, bot_log_channel_id
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      security_log_channel_id, anti_nuke_log_channel_id, anti_raid_log_channel_id, bot_log_channel_id, media_channel_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(guild_id) DO UPDATE SET
       min_xp = ?, max_xp = ?, cooldown = ?, no_xp_channels = ?, no_xp_roles = ?, level_up_channel_id = ?, xp_boost_roles = ?, xp_boost_multiplier = ?,
       welcome_channel_id = ?, welcome_message = ?, welcome_banner_url = ?, dm_welcome_enabled = ?, dm_welcome_message = ?,
@@ -398,7 +399,7 @@ app.post("/api/config/:guildId", isAuth, async (req, res) => {
       member_log_channel_id = ?, auto_roles = ?, account_age_days = ?, verify_role_id = ?, member_count_channel_id = ?,
       server_log_channel_id = ?, moderation_log_channel_id = ?, permission_log_channel_id = ?, role_log_channel_id = ?,
       channel_log_channel_id = ?, message_log_channel_id = ?, voice_log_channel_id = ?, invite_log_channel_id = ?,
-      security_log_channel_id = ?, anti_nuke_log_channel_id = ?, anti_raid_log_channel_id = ?, bot_log_channel_id = ?
+      security_log_channel_id = ?, anti_nuke_log_channel_id = ?, anti_raid_log_channel_id = ?, bot_log_channel_id = ?, media_channel_id = ?
   `,
     [
       guildId,
@@ -437,6 +438,7 @@ app.post("/api/config/:guildId", isAuth, async (req, res) => {
       antiNukeLogChannelId || "",
       antiRaidLogChannelId || "",
       botLogChannelId || "",
+      mediaChannelId || "",
 
       Number(minXp) || 15,
       Number(maxXp) || 25,
@@ -473,6 +475,7 @@ app.post("/api/config/:guildId", isAuth, async (req, res) => {
       antiNukeLogChannelId || "",
       antiRaidLogChannelId || "",
       botLogChannelId || "",
+      mediaChannelId || "",
     ],
   );
 
